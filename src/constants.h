@@ -49,5 +49,10 @@ enum Square {
     a1, b1, c1, d1, e1, f1, g1, h1,
 };
 
+const int BISHOP_MOVES[8] = {-11, -9, 9, 11, 0, 0, 0, 0};
+const int KNIGHT_MOVES[8] = {-21, -19, -12, -8, 8, 12, 19, 21};
+const int ROOK_MOVES[8] = {-10, -1, 1, 10, 0, 0, 0, 0};
+const int KING_QUEEN_MOVES[8] = {-11, -10, -9, -1, 1, 9, 10, 11};
+
 
 #endif
