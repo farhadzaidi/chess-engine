@@ -7,12 +7,10 @@
 // Bits 13 indicates whether the move type (quiet or capture)
 // Bits 14-16 indicate the move flag (special move)
 
-namespace Move {
-	int new_move(int from, int to, int mtype, int flag);
-	int get_from(int m);
-	int get_to(int m);
-	int get_mtype(int m);
-	int get_flag(int m);
-}
+int new_move(int from, int to, int mtype, int flag);
+int get_from(int m);
+int get_to(int m);
+int get_mtype(int m);
+int get_flag(int m);
 
 #endif

@@ -1,6 +1,6 @@
-#include "move.h"
+#include "move.hpp"
 
-int Move::new_move(int from, int to, int mtype, int flag) {
+int new_move(int from, int to, int mtype, int flag) {
 	to <<= 6;
 	mtype <<= 12;
 	flag <<= 13;

@@ -2,9 +2,9 @@
 #include <cctype>
 #include <unordered_map>
 
-#include "repr.h"
-#include "constants.h"
-#include "board.h"
+#include "repr.hpp"
+#include "constants.hpp"
+#include "board.hpp"
 
 static const std::unordered_map<char, int> chr_to_p = {
     std::make_pair('0', EMPTY),

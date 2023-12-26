@@ -2,13 +2,15 @@
 #define BOARD_H
 
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 
 class Board {
 public:
    
     Board();
 
-    const int mailbox64[64] = {
+    int mailbox64[64] = {
         21, 22, 23, 24, 25, 26, 27, 28,
         31, 32, 33, 34, 35, 36, 37, 38,
         41, 42, 43, 44, 45, 46, 47, 48,
@@ -19,7 +21,7 @@ public:
         91, 92, 93, 94, 95, 96, 97, 98 
     };
 
-    const int mailbox_to_chessboard[120] = {
+    int mailbox[120] = {
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1,  0,  1,  2,  3,  4,  5,  6,  7, -1,
@@ -41,10 +43,8 @@ public:
     int to_move;
     int enpas_sq;
 
-    int pawn_moves(int sq);
-    int knight_moves(int sq);
-    int king_moves(int sq);
-    int sliding_moves(int sq);
+    std::unordered_map<int, std::unordered_set<int>> attack_maps;
+    std::unordered_map<int, int> pins; // map pinned piece square to pin direction
 
     int make_move(int move);
     int unmake_move(int move);
