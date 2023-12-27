@@ -3,10 +3,6 @@
 
 Board::Board() {}
 
-int Board::get_mailbox_num(int sq, int offset) {
-	return mailbox[mailbox64[sq] + offset];
-}
-
 int Board::in_bounds(int sq) {
 	return sq != -1;
 }
@@ -17,4 +13,8 @@ int Board::is_empty(int sq) {
 
 int Board::diff_colors(int sq1, int sq2) {
 	return color[sq1] ^ color[sq2];
+}
+
+int Board::get_mailbox_num(int sq, int offset) {
+	return mailbox[mailbox64[sq] + offset];
 }

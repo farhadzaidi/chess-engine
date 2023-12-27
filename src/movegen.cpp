@@ -65,7 +65,7 @@ std::vector<int> get_sliding_moves(Board &b, int sq, int directions[8]) {
 	// Keep track of attack maps for each piece
 		// unordered_map mapping piece square to unordered_set of attacked squares
 		// Can check if a king is in check if the king's index is in any of the attack maps
-		// (will have to loop thru each enemy piece, but this shouldn't be overhead)
+		// (will have to loop thru each enemy piece, but this shouldn't be much overhead)
 	// Before move generation, at the start of every position,
 	// find friendly pieces nearest to the king in each direction
 	// once a piece is found, check if there is an attacking piece
