@@ -57,7 +57,7 @@ void load_from_FEN(Board &b, std::string FEN) {
     int sq = 0;
     while (!std::isspace(FEN[i])) {
         if (std::isalpha(FEN[i])) {
-            b.color[sq] = std::isupper(FEN[i]);
+            b.color[sq] = std::isupper(FEN[i]) ? WHITE : BLACK;
             b.piece[sq] = chr_to_p.at(std::tolower(FEN[i]));
             b.piece_squares[b.color[sq]].push_back(sq);
             sq++;
@@ -86,16 +86,17 @@ void load_from_FEN(Board &b, std::string FEN) {
         while (!std::isspace(FEN[i])) {
             switch (FEN[i]) {
                 case 'K':
-                    b.castling_rights[W_SHORT] = 1;
+                    // b.castling_rights[W_SHORT] = 1;
+                    b.castling_rights |= W_SHORT;
                     break;
                 case 'Q':
-                    b.castling_rights[W_LONG] = 1;
+                    b.castling_rights |= W_LONG;
                     break;
                 case 'k':
-                    b.castling_rights[B_SHORT] = 1;
+                    b.castling_rights |= B_SHORT;
                     break;
                 case 'q':
-                    b.castling_rights[B_LONG] = 1;
+                    b.castling_rights |= B_LONG;
                     break;
             }
 
@@ -115,6 +116,20 @@ void load_from_FEN(Board &b, std::string FEN) {
         b.enpas_sq = chess_to_sq(FEN[i + 1], FEN[i]);
         i += 2;
     }
+
+    // Skip space
+    i++;
+
+    // Get number of half moves and full moves
+    b.num_plys = FEN[i] - '0';
+    i += 2;
+
+    std::string num_moves = "";
+    while (!std::isspace(FEN[i])) {
+        num_moves += FEN[i];
+        i++;
+    }
+    b.num_moves = std::stoi(num_moves);
 }
 
 
@@ -145,19 +160,19 @@ void print_attr(Board &b) {
 
     // Print castling rights
     std::cout << "Castling rights:";
-    if (b.castling_rights[B_LONG]) {
+    if (b.castling_rights & B_LONG) {
         std::cout << " b(O-O-O),";
     }
 
-    if (b.castling_rights[B_SHORT]) {
+    if (b.castling_rights & B_SHORT) {
         std::cout << " b(O-O),";
     }
 
-    if (b.castling_rights[W_LONG]) {
+    if (b.castling_rights & W_LONG) {
         std::cout << " w(O-O-O),";
     }
 
-    if (b.castling_rights[W_SHORT]) {
+    if (b.castling_rights & W_SHORT) {
         std::cout << " w(O-O)";
     }
 
@@ -185,5 +200,4 @@ void print_attr(Board &b) {
     }
 
     std::cout << "\n\n";
-
 }

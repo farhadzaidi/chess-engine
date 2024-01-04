@@ -5,7 +5,9 @@
 
 class Board;
 
+// Generates psuedo-legal moves (i.e. does not enforce checks)
+
 std::vector<int> get_pawn_moves(Board &b, int sq);
-std::vector<int> get_sliding_moves(Board &b, int sq, int directions);
+std::vector<int> get_piece_moves(Board &b, int sq, int directions[8], int slide);
 
 #endif 

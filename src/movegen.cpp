@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include "movegen.hpp"
 #include "constants.hpp"
 #include "board.hpp"
@@ -15,6 +17,10 @@ std::vector<int> get_pawn_moves(Board &b, int sq) {
 	// Determine starting row and promotion row based on pawn's perspective
 	int start_row = is_white ? 6 : 1;
 	int last_row = is_white ? 0 : 7;
+
+	if (sq / 8 == last_row) {
+		throw std::runtime_error("Pawn cannot be on last rank!");
+	}
 
 	// Check if pawn can move north
 	int north_sq = b.get_mailbox_num(sq, north);
@@ -61,33 +67,7 @@ std::vector<int> get_pawn_moves(Board &b, int sq) {
 	return moves;
 }
 
-std::vector<int> get_sliding_moves(Board &b, int sq, int directions[8]) {
-	// Keep track of attack maps for each piece
-		// unordered_map mapping piece square to unordered_set of attacked squares
-		// Can check if a king is in check if the king's index is in any of the attack maps
-		// (will have to loop thru each enemy piece, but this shouldn't be much overhead)
-	// Before move generation, at the start of every position,
-	// find friendly pieces nearest to the king in each direction
-	// once a piece is found, check if there is an attacking piece
-	// in that ray (e.g. if the friendly piece is somewhere northeast
-	// of the king, check if there is a bishop or queen farther northeast)
-		// if so, this is a pinned piece and can only be moved in that direction
-		// (e.g. northeast)
-			// Need to know 2 things:
-				// piece square
-				// pin direction
-			// Similar to attack map, map piece square to pin direction
-	// At worst, this will create rays from the king spanning to the end of board,
-	// once before every move gen call (slight overhead)
-	// During this check, we can kill 2 birds with 1 stone
-		// Check if run into an enemy sliding piece that can attack the king
-		// if so, the king is in check
-			// even though we have attack maps, this will account for discovered checks
-	// To check if a capture is valid while the king is in check, ignore the captured piece's
-	// attack map when checking for checks
-
-	// This data gets reset every ply
-
+std::vector<int> get_sliding_moves(Board &b, int sq, int directions[8], int slide) {
 	std::vector<int> moves;
 	for (int i = 0; i < 8; i++) {
 		// Not all pieces have 8 move directions
@@ -109,9 +89,14 @@ std::vector<int> get_sliding_moves(Board &b, int sq, int directions[8]) {
 				break;
 			}
 
+			if (!slide) {
+				break;
+			}
+
 			nxt_sq = b.get_mailbox_num(sq, directions[i]);
 		}
 	}
 
 	return moves;
 }
+

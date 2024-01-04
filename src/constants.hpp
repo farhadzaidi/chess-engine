@@ -32,10 +32,10 @@ enum MoveFlag {
 };
 
 enum CastlingRights {
-    B_SHORT,
-    B_LONG,
-    W_SHORT,
-    W_LONG
+    B_SHORT = 1,
+    B_LONG = 2,
+    W_SHORT = 4,
+    W_LONG = 8
 };
 
 enum Square {
@@ -54,5 +54,13 @@ const int KNIGHT_MOVES[8] = {-21, -19, -12, -8, 8, 12, 19, 21};
 const int ROOK_MOVES[8] = {-10, -1, 1, 10, 0, 0, 0, 0};
 const int KING_QUEEN_MOVES[8] = {-11, -10, -9, -1, 1, 9, 10, 11};
 
+// Starting squares for kings and rooks (useful for castling)
+const int WK_START = e1;
+const int WLR_START = a1;
+const int WRR_START = h1;
+
+const int BK_START = e8;
+const int BLR_START = a8;
+const int BRR_START = h8;
 
 #endif

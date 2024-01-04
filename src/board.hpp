@@ -36,15 +36,20 @@ public:
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1  
     };
 
+    // Board representation
     int color[64] = {};
     int piece[64] = {};
     std::vector<int> piece_squares[2];
-    int castling_rights[4] = {};
+
+    // Board attributes loaded from FEN
+    // int castling_rights[4] = {};
+    int castling_rights = 0;
     int to_move;
     int enpas_sq;
-
-    std::unordered_map<int, std::unordered_set<int>> attack_maps;
-    std::unordered_map<int, int> pins; // map pinned piece square to pin direction
+    // Number of halfmoves SINCE last capture or pawn advance 
+    // (used for fifty-move rule) 
+    int num_plys;
+    int num_moves;
 
     int make_move(int move);
     int unmake_move(int move);
@@ -53,7 +58,7 @@ public:
     int is_empty(int sq);
     int diff_colors(int sq1, int sq2);
     int get_mailbox_num(int sq, int offset);
-
+    
 };
 
 #endif
