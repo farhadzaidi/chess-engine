@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <stack>
 
-#include "Graphics.hpp"
+#include "SFML/Graphics.hpp"
 #include "constants.hpp"
 #include "board.hpp"
 #include "repr.hpp"
