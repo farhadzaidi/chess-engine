@@ -2,8 +2,8 @@
 #include <string>
 #include <unordered_map>
 #include <stack>
-#include <SFML/Graphics.hpp>
 
+#include "Graphics.hpp"
 #include "constants.hpp"
 #include "board.hpp"
 #include "repr.hpp"
