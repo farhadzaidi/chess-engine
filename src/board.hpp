@@ -1,9 +1,8 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include <vector>
-#include <unordered_map>
 #include <unordered_set>
+#include <stack>
 
 class Board {
 public:
@@ -39,7 +38,8 @@ public:
     // Board representation
     int color[64] = {};
     int piece[64] = {};
-    std::vector<int> piece_squares[2];
+    std::unordered_set<int> piece_squares[2];
+    std::stack<int> captured_pieces[2];
 
     // Board attributes loaded from FEN
     // int castling_rights[4] = {};

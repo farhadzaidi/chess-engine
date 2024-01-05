@@ -59,7 +59,7 @@ void load_from_FEN(Board &b, std::string FEN) {
         if (std::isalpha(FEN[i])) {
             b.color[sq] = std::isupper(FEN[i]) ? WHITE : BLACK;
             b.piece[sq] = chr_to_p.at(std::tolower(FEN[i]));
-            b.piece_squares[b.color[sq]].push_back(sq);
+            b.piece_squares[b.color[sq]].insert(sq);
             sq++;
         } else if (std::isdigit(FEN[i])) {
             sq += FEN[i] - '0';

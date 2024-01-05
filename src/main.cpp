@@ -1,10 +1,13 @@
+#include <iostream>
 #include <string>
 #include <unordered_map>
+#include <stack>
 #include <SFML/Graphics.hpp>
 
 #include "constants.hpp"
 #include "board.hpp"
 #include "repr.hpp"
+#include "move.hpp"
 
 sf::Color LIGHT(245, 245, 245);
 sf::Color DARK(46, 46, 56);
@@ -90,19 +93,69 @@ void draw_pieces(sf::RenderWindow &window, Board &b) {
 
 int main(int argc, char* argv[]) {
 
-	std::string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w Kq - 0 1";
+	std::string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	Board b;
 	load_from_FEN(b, FEN);
+	print_board(b);
+	print_attr(b);
 
 	sf::RenderWindow window(sf::VideoMode(1500, 1500), "Chess");
     sf::Font font;
 	font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
 
+	int from = -1;
+	int to = -1;
+	std::stack<int> moves;
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
                 window.close();
+            }
+
+            // Left click
+            if (event.type == sf::Event::MouseButtonPressed
+            	&& event.mouseButton.button == sf::Mouse::Left) {
+            	// Get position of click and compute row/col
+            	sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
+        		int col = mouse_pos.x / 150 - 1;
+        		int row = mouse_pos.y / 150 - 1;
+
+        		// Ensure the click area is in bounds before processing further
+        		if (0 <= col && col <= 7 && 0 <= row && row <= 7) {
+					if (from == -1 && to == -1) {
+						int sq = row * 8 + col;
+						if (b.piece[sq] != EMPTY && b.color[sq] == b.to_move) {
+							from = sq;
+						}
+            		} else if (to == -1) {
+	            		to = row * 8 + col;
+	            		if (b.piece[to] == EMPTY || b.color[to] != b.to_move) {
+	            			// Make move
+	            			int mtype = b.piece[to] == EMPTY ? QUIET : CAPTURE;
+	            			int mflag = NORMAL;
+	            			int move = new_move(from, to, mtype, mflag);
+	            			moves.push(move);
+	            			b.make_move(move);
+	            			print_board(b);
+	            			print_attr(b);
+	            		}
+
+            			// Reset from and to
+            			from = -1;
+            			to = -1;
+            		}
+        		}
+            }
+
+            // Left arrow key (undo)
+            if (event.type == sf::Event::KeyPressed
+            	&& event.key.code == sf::Keyboard::Left) {
+            	if (!moves.empty()) {
+            		int move = moves.top();
+            		moves.pop();
+            		b.unmake_move(move);
+            	}
             }
         }
 
