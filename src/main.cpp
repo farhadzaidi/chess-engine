@@ -75,7 +75,7 @@ void draw_pieces(sf::RenderWindow &window, Board &b) {
 
 		sf::Image img;
 		img.loadFromFile(
-			"/home/myst/code/chess_engine/images/"
+			"assets/images/"
 			+ color_map.at(b.color[i])
 			+ piece_map.at(b.piece[i]) 
 			+ ".png"
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
 
 	sf::RenderWindow window(sf::VideoMode(1500, 1500), "Chess");
     sf::Font font;
-	font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+	font.loadFromFile("assets/fonts/DejaVuSans.ttf");
 
 	int from = -1;
 	int to = -1;

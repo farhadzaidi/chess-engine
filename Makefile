@@ -1,17 +1,20 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall
-
 SRCDIR = src
-SRCS = $(wildcard $(SRCDIR)/*.cpp)
-OBJS = $(SRCS:.cpp=.o)
-EXEC = main
+BUILDDIR = build
 
+SRCS = $(wildcard $(SRCDIR)/*.cpp)
+OBJS = $(patsubst $(SRCDIR)/%.cpp, $(BUILDDIR)/%.o, $(SRCS))
+EXEC = $(BUILDDIR)/main
 SFML_LIBS = -lsfml-graphics -lsfml-window -lsfml-system
 
-$(EXEC): $(OBJS)
-	$(CXX) -o $@ $(OBJS) $(SFML_LIBS)
+all: $(EXEC)
 
-%.o: $(SRCDIR)/%.cpp
+$(EXEC): $(OBJS)
+	$(CXX) -o $@ $^ $(SFML_LIBS)
+
+$(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+	@mkdir -p $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 .PHONY: run clean
@@ -20,4 +23,4 @@ run: $(EXEC)
 	./$(EXEC)
 
 clean:
-	rm -f $(OBJS) $(EXEC)
+	rm -rf $(BUILDDIR)
