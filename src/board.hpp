@@ -42,7 +42,6 @@ public:
     std::stack<int> captured_pieces[2];
 
     // Board attributes loaded from FEN
-    // int castling_rights[4] = {};
     int castling_rights = 0;
     int to_move;
     int enpas_sq;
@@ -51,8 +50,21 @@ public:
     int num_plys;
     int num_moves;
 
+    // TODO:
+        // Keep track of moves "updated castling rights"
+        // Keep track of king square
+        // Implement is_attacked
+
     int make_move(int move);
-    int unmake_move(int move);
+    int normal(int move);
+    int castle(int move);
+    int en_passant(int move);
+    int promotion(int move);
+
+    void unmake_move(int move);
+    void unmake_castle(int move);
+    void unmake_en_passant(int move);
+    void unmake_promotion(int move);
 
     int in_bounds(int sq);
     int is_empty(int sq);

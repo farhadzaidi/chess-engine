@@ -1,13 +1,38 @@
 #include <stdexcept>
+#include <iostream>
 
 #include "movegen.hpp"
 #include "constants.hpp"
 #include "board.hpp"
 #include "move.hpp"
 
-std::vector<int> get_pawn_moves(Board &b, int sq) {
+std::vector<int> gen_moves(Board &b, int sq) {
 	std::vector<int> moves;
+	switch (b.piece[sq]) {
+		case PAWN:
+			get_pawn_moves(b, sq, moves);
+			break;
+		case BISHOP:
+			get_piece_moves(b, sq, BISHOP_MOVES, 1, moves);
+			break;
+		case KNIGHT:
+			get_piece_moves(b, sq, KNIGHT_MOVES, 0, moves);
+			break;
+		case ROOK:
+			get_piece_moves(b, sq, ROOK_MOVES, 1, moves);
+			break;
+		case QUEEN:
+			get_piece_moves(b, sq, KING_QUEEN_MOVES, 1, moves);
+			break;
+		case KING:
+			get_piece_moves(b, sq, KING_QUEEN_MOVES, 0, moves);
+			break;
+	}
 
+	return moves;
+}
+
+void get_pawn_moves(Board &b, int sq, std::vector<int> &moves) {
 	// Set directions based on pawn's perspective
 	int is_white = b.color[sq] == WHITE ? 1 : 0;
 	int north = is_white ? -10 : 10;
@@ -63,12 +88,10 @@ std::vector<int> get_pawn_moves(Board &b, int sq) {
 			}
 		}
 	}
-
-	return moves;
 }
 
-std::vector<int> get_sliding_moves(Board &b, int sq, int directions[8], int slide) {
-	std::vector<int> moves;
+void get_piece_moves(Board &b, int sq, const int directions[8], int slide,
+	std::vector<int> &moves) {
 	for (int i = 0; i < 8; i++) {
 		// Not all pieces have 8 move directions
 		// Break the loop when the current piece has no more directions 
@@ -93,10 +116,11 @@ std::vector<int> get_sliding_moves(Board &b, int sq, int directions[8], int slid
 				break;
 			}
 
-			nxt_sq = b.get_mailbox_num(sq, directions[i]);
+			nxt_sq = b.get_mailbox_num(nxt_sq, directions[i]);
 		}
 	}
 
-	return moves;
+	// TODO:
+	// Implement castling move generation (make sure to check for castling rights)
 }
 

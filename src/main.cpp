@@ -2,15 +2,18 @@
 #include <string>
 #include <unordered_map>
 #include <stack>
+#include <vector>
 
 #include "SFML/Graphics.hpp"
 #include "constants.hpp"
 #include "board.hpp"
 #include "repr.hpp"
 #include "move.hpp"
+#include "movegen.hpp"
 
 sf::Color LIGHT(245, 245, 245);
 sf::Color DARK(46, 46, 56);
+sf::Color INFO(127, 212, 245);
 
 void draw_board(sf::RenderWindow &window, sf::Font &font) {
 	// Draw border
@@ -91,9 +94,29 @@ void draw_pieces(sf::RenderWindow &window, Board &b) {
 	}
 }
 
-int main(int argc, char* argv[]) {
+void draw_moves(sf::RenderWindow &window, Board &b, int from) {
+	if (from == -1)
+		return;
 
-	std::string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+	std::vector<int> moves = gen_moves(b, from);
+	for (int move : moves) {
+		int to = get_to(move);
+		int row = to / 8;
+		int col = to % 8;
+
+		sf::CircleShape c;
+		c.setRadius(20);
+		c.setPosition(150 * (col + 1) + 50, 150 * (row + 1) + 50);
+		c.setFillColor(INFO);
+		window.draw(c);
+	}
+}
+
+int main(int argc, char* argv[]) {
+	// TODO:
+	// Implement auto promote to queen
+
+	std::string FEN = "rnbqkbnr/pppppppp/8/8/8/8/RPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	Board b;
 	load_from_FEN(b, FEN);
 	print_board(b);
@@ -131,19 +154,31 @@ int main(int argc, char* argv[]) {
             		} else if (to == -1) {
 	            		to = row * 8 + col;
 	            		if (b.piece[to] == EMPTY || b.color[to] != b.to_move) {
-	            			// Make move
+
+	            			// Create move
 	            			int mtype = b.piece[to] == EMPTY ? QUIET : CAPTURE;
 	            			int mflag = NORMAL;
 	            			int move = new_move(from, to, mtype, mflag);
-	            			moves.push(move);
-	            			b.make_move(move);
-	            			print_board(b);
-	            			print_attr(b);
-	            		}
 
-            			// Reset from and to
-            			from = -1;
-            			to = -1;
+	            			// Validate move
+	            			std::vector<int> from_moves = gen_moves(b, from);
+	            			for (int from_move : from_moves) {
+	            				int move_to = get_to(from_move);
+	            				if (to == move_to) {
+			            			moves.push(move);
+			            			b.make_move(move);
+			            			print_board(b);
+			            			print_attr(b);
+			            			break;
+	            				}
+	            			}
+
+	            			from = -1;
+	            			to = -1;
+	            		} else {
+	            			from = to;
+	            			to = -1;
+	            		}
             		}
         		}
             }
@@ -162,8 +197,22 @@ int main(int argc, char* argv[]) {
     	window.clear(LIGHT);
         draw_board(window, font);
         draw_pieces(window, b);
+        draw_moves(window, b, from);
         window.display();
     }
 
     return 0;
 }
+
+
+// std::vector<int> moves;
+// get_piece_moves(b, a2, ROOK_MOVES, 1, moves);
+// for (const auto& move: moves) {
+// 	int from = get_from(move);
+// 	int to = get_to(move);
+// 	int mtype = get_mtype(move);
+// 	int flag = get_flag(move);
+
+// 	std::cout << "from: " << from << ", to: " << to << ", mtype: " << mtype
+// 		<< ", flag: " << flag << "\n"; 
+// }
