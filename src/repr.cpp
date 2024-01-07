@@ -60,6 +60,9 @@ void load_from_FEN(Board &b, std::string FEN) {
             b.color[sq] = std::isupper(FEN[i]) ? WHITE : BLACK;
             b.piece[sq] = chr_to_p.at(std::tolower(FEN[i]));
             b.piece_squares[b.color[sq]].insert(sq);
+            if (b.piece[sq] == KING) {
+                b.king_squares[b.color[sq]] = sq;
+            }
             sq++;
         } else if (std::isdigit(FEN[i])) {
             sq += FEN[i] - '0';
@@ -109,11 +112,11 @@ void load_from_FEN(Board &b, std::string FEN) {
 
     // Determine en passant square
     if (FEN[i] == '-') {
-        b.enpas_sq = -1;
+        b.enpas_sq.push(-1);
         i++;
     }
     else {
-        b.enpas_sq = chess_to_sq(FEN[i + 1], FEN[i]);
+        b.enpas_sq.push(chess_to_sq(FEN[i + 1], FEN[i]));
         i += 2;
     }
 
@@ -179,10 +182,10 @@ void print_attr(Board &b) {
     std::cout << "\n";
 
     // Print en passant target square
-    if (b.enpas_sq == -1) {
+    if (b.enpas_sq.top() == -1) {
         std::cout << "No en passant target square";
     } else {
-        std::string ep_sq_chess = sq_to_chess(b.enpas_sq);
+        std::string ep_sq_chess = sq_to_chess(b.enpas_sq.top());
         std::cout << "En passant target square: " << ep_sq_chess;
     }
 

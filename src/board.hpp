@@ -44,11 +44,15 @@ public:
     // Board attributes loaded from FEN
     int castling_rights = 0;
     int to_move;
-    int enpas_sq;
+    std::stack<int> enpas_sq;
     // Number of halfmoves SINCE last capture or pawn advance 
     // (used for fifty-move rule) 
     int num_plys;
     int num_moves;
+
+    // Other useful attributes
+    std::stack<int> castling_rights_updates;
+    int king_squares[2] = {};
 
     // TODO:
         // Keep track of moves "updated castling rights"
@@ -56,15 +60,10 @@ public:
         // Implement is_attacked
 
     int make_move(int move);
-    int normal(int move);
-    int castle(int move);
-    int en_passant(int move);
-    int promotion(int move);
-
     void unmake_move(int move);
-    void unmake_castle(int move);
-    void unmake_en_passant(int move);
-    void unmake_promotion(int move);
+    void update_castling_rights(int moving_piece, int side);
+    int is_attacked(int sq);
+
 
     int in_bounds(int sq);
     int is_empty(int sq);

@@ -113,10 +113,9 @@ void draw_moves(sf::RenderWindow &window, Board &b, int from) {
 }
 
 int main(int argc, char* argv[]) {
-	// TODO:
-	// Implement auto promote to queen
+	// TODO: Implement auto promote to queen
 
-	std::string FEN = "rnbqkbnr/pppppppp/8/8/8/8/RPPPPPPP/RNBQKBNR w KQkq - 0 1";
+	std::string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	Board b;
 	load_from_FEN(b, FEN);
 	print_board(b);
@@ -154,21 +153,22 @@ int main(int argc, char* argv[]) {
             		} else if (to == -1) {
 	            		to = row * 8 + col;
 	            		if (b.piece[to] == EMPTY || b.color[to] != b.to_move) {
-
-	            			// Create move
-	            			int mtype = b.piece[to] == EMPTY ? QUIET : CAPTURE;
-	            			int mflag = NORMAL;
-	            			int move = new_move(from, to, mtype, mflag);
-
-	            			// Validate move
 	            			std::vector<int> from_moves = gen_moves(b, from);
 	            			for (int from_move : from_moves) {
 	            				int move_to = get_to(from_move);
 	            				if (to == move_to) {
-			            			moves.push(move);
-			            			b.make_move(move);
+			            			moves.push(from_move);
+			            			b.make_move(from_move);
 			            			print_board(b);
 			            			print_attr(b);
+
+			            			// std::cout << "enpas stack: \n";
+			            			// std::stack<int> temp = b.enpas_sq;
+			            			// while (!temp.empty()) {
+			            			// 	std::cout << temp.top() << ", ";
+			            			// 	temp.pop();
+			            			// }
+			            			// std::cout << "\n";
 			            			break;
 	            				}
 	            			}
@@ -190,6 +190,15 @@ int main(int argc, char* argv[]) {
             		int move = moves.top();
             		moves.pop();
             		b.unmake_move(move);
+            		print_board(b);
+			        print_attr(b);
+    			    // std::cout << "enpas stack: \n";
+        			// std::stack<int> temp = b.enpas_sq;
+        			// while (!temp.empty()) {
+        			// 	std::cout << temp.top() << ", ";
+        			// 	temp.pop();
+        			// }
+        			// std::cout << "\n";
             	}
             }
         }
@@ -203,16 +212,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-
-
-// std::vector<int> moves;
-// get_piece_moves(b, a2, ROOK_MOVES, 1, moves);
-// for (const auto& move: moves) {
-// 	int from = get_from(move);
-// 	int to = get_to(move);
-// 	int mtype = get_mtype(move);
-// 	int flag = get_flag(move);
-
-// 	std::cout << "from: " << from << ", to: " << to << ", mtype: " << mtype
-// 		<< ", flag: " << flag << "\n"; 
-// }

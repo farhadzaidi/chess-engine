@@ -75,15 +75,15 @@ void get_pawn_moves(Board &b, int sq, std::vector<int> &moves) {
 			if (!b.is_empty(cap_sq) && b.diff_colors(sq, cap_sq)) {
 				// Generate promotion moves
 				if (cap_sq / 8 == last_row) {
-					moves.push_back(new_move(sq, cap_sq, QUIET, P_BISHOP));
-					moves.push_back(new_move(sq, cap_sq, QUIET, P_KNIGHT));
-					moves.push_back(new_move(sq, cap_sq, QUIET, P_ROOK));
-					moves.push_back(new_move(sq, cap_sq, QUIET, P_QUEEN));
+					moves.push_back(new_move(sq, cap_sq, CAPTURE, P_BISHOP));
+					moves.push_back(new_move(sq, cap_sq, CAPTURE, P_KNIGHT));
+					moves.push_back(new_move(sq, cap_sq, CAPTURE, P_ROOK));
+					moves.push_back(new_move(sq, cap_sq, CAPTURE, P_QUEEN));
 				} else {
 					moves.push_back(new_move(sq, cap_sq, CAPTURE, NORMAL));
 				}
 			// en passant capture
-			} else if (cap_sq == b.enpas_sq) {
+			} else if (cap_sq == b.enpas_sq.top()) {
 				moves.push_back(new_move(sq, cap_sq, CAPTURE, EN_PASSANT));
 			}
 		}
@@ -120,7 +120,23 @@ void get_piece_moves(Board &b, int sq, const int directions[8], int slide,
 		}
 	}
 
-	// TODO:
-	// Implement castling move generation (make sure to check for castling rights)
+	if (b.piece[sq] == KING) {
+		// check castling rights, gen respective castling move
+		int short_castling_right = b.to_move == WHITE ? W_SHORT : B_SHORT;
+		int long_castling_right = b.to_move == WHITE ? W_LONG : B_LONG;
+
+		if (b.castling_rights & short_castling_right
+			&& b.piece[b.king_squares[b.to_move] + 1] == EMPTY
+			&& b.piece[b.king_squares[b.to_move] + 2] == EMPTY) {
+			moves.push_back(new_move(sq, sq + 2, QUIET, CASTLE));
+		}
+
+		if (b.castling_rights & long_castling_right
+			&& b.piece[b.king_squares[b.to_move] - 1] == EMPTY
+			&& b.piece[b.king_squares[b.to_move] - 2] == EMPTY
+			&& b.piece[b.king_squares[b.to_move] - 3] == EMPTY) {
+			moves.push_back(new_move(sq, sq - 2, QUIET, CASTLE));
+		}
+	}
 }
 

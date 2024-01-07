@@ -3,7 +3,7 @@
 #include "move.hpp"
 
 #include <iostream>
-#include <algorithm>
+#include <cmath>
 
 // NOTES:
 	// A fair amount of branching in make_move and unmake_move since I am trying
@@ -33,9 +33,6 @@ int Board::get_mailbox_num(int sq, int offset) {
 
 int Board::make_move(int move) {
 	// TODO:
-		// update castling rights
-		// update king square
-		// update en passant target square
 		// validate castle using is_attacked
 			// check if "king_sq" is attacked
 			// (final king_sq pos gets checked at the end)
@@ -45,13 +42,25 @@ int Board::make_move(int move) {
 	int to = get_to(move);
 	int mtype = get_mtype(move);
 	int flag = get_flag(move);
-	int valid = 1;
+	// int valid = 1;
+
+	// Set en passant target square if pawn moves two squares
+	int south = to_move == WHITE ? 8 : -8;
+	if (piece[from] == PAWN && abs(from - to) == 16) {
+		enpas_sq.push(to + south);
+	} else {
+		enpas_sq.push(-1);
+	}
 
 	if (mtype == CAPTURE) {
 		// Change square of captured piece to south of "to" if the move type is
 		// en passant
-		int south = to_move == WHITE ? 8 : -8;
-		int cap_sq = flag == EN_PASSANT ? to + south : to;
+		int cap_sq = to;
+		if (flag == EN_PASSANT) {
+			cap_sq += south;
+			piece[cap_sq] = EMPTY;
+			color[cap_sq] = EMPTY;
+		}
 
 		piece_squares[!to_move].erase(cap_sq);
 		captured_pieces[to_move].push(piece[cap_sq]);
@@ -101,6 +110,12 @@ int Board::make_move(int move) {
 			break;
 	}
 
+	update_castling_rights(piece[to], to_move);
+
+	if (piece[to] == KING) {
+		king_squares[to_move] = to;
+	}
+
 	// Switch turn
 	to_move = !to_move;
 
@@ -109,10 +124,6 @@ int Board::make_move(int move) {
 }
 
 void Board::unmake_move(int move) {
-	// TODO:
-		// undo castling rights update
-		// undo king square update
-		// undo ep target square update
 	int from = get_from(move);
 	int to = get_to(move);
 	int mtype = get_mtype(move);
@@ -120,6 +131,8 @@ void Board::unmake_move(int move) {
 
 	// Revert turn
 	to_move = !to_move;
+
+	enpas_sq.pop();
 
 	// Unmake normal move
 	piece[from] = piece[to];
@@ -172,6 +185,79 @@ void Board::unmake_move(int move) {
 		piece[to] = EMPTY;
 		color[to] = EMPTY;
 	}
+
+	int castling_rights_update = castling_rights_updates.top();
+	castling_rights_updates.pop();
+	castling_rights |= castling_rights_update;
+
+	if (piece[from] == KING) {
+		king_squares[to_move] = from;
+	}
 }
 
-// TODO: implement is_attacked(int sq)
+void Board::update_castling_rights(int moving_piece, int side) {
+	int update = 0;
+	if (castling_rights) {
+		int short_right = side == WHITE ? W_SHORT : B_SHORT;
+		int long_right = side == WHITE ? W_LONG : B_LONG;
+		int rr_start = side == WHITE ? WRR_START : BRR_START;
+		int lr_start = side == WHITE ? WLR_START : BLR_START;
+
+		if (moving_piece == KING) {
+			if (castling_rights & short_right) {
+				castling_rights ^= short_right;
+				update |= short_right;
+			}
+
+			if (castling_rights & long_right) {
+				castling_rights ^= long_right;
+				update |= long_right;
+			}
+		}
+
+		if (moving_piece == ROOK) {
+			if (castling_rights & short_right && piece[rr_start] == EMPTY) {
+				castling_rights ^= short_right;
+				update |= short_right;
+			}
+
+			if (castling_rights & long_right && piece[lr_start] == EMPTY) {
+				castling_rights ^= long_right;
+				update |= long_right;
+			}	
+		}
+	}
+	castling_rights_updates.push(update);
+}
+
+// int is_attacked(int sq) {
+
+// }
+
+// for (int i = 0; i < 8; i++) {
+// 	// Not all pieces have 8 move directions
+// 	// Break the loop when the current piece has no more directions 
+// 	if (directions[i] == 0) {
+// 		break;
+// 	}
+
+// 	// Compute the next (to) square based on directions
+// 	int nxt_sq = b.get_mailbox_num(sq, directions[i]);
+// 	while (b.in_bounds(nxt_sq)) {
+// 		// If the next square is empty, create the move and keep going
+// 		if (b.is_empty(nxt_sq)) {
+// 			moves.push_back(new_move(sq, nxt_sq, QUIET, NORMAL));
+// 		} else {
+// 			if (b.diff_colors(sq, nxt_sq)) {
+// 				moves.push_back(new_move(sq, nxt_sq, CAPTURE, NORMAL));
+// 			} 
+// 			break;
+// 		}
+
+// 		if (!slide) {
+// 			break;
+// 		}
+
+// 		nxt_sq = b.get_mailbox_num(nxt_sq, directions[i]);
+// 	}
+// }
