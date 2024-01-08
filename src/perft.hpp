@@ -11,4 +11,4 @@ const unsigned long long perft_expected[8] = {
 	3'195'901'860
 };
 
-unsigned long long perft(int depth, Board &b, int original_depth);
+unsigned long long perft(Board &b, int depth);

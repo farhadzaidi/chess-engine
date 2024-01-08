@@ -55,11 +55,9 @@ const int ROOK_MOVES[8] = {-10, -1, 1, 10, 0, 0, 0, 0};
 const int KING_QUEEN_MOVES[8] = {-11, -10, -9, -1, 1, 9, 10, 11};
 
 // Starting squares for kings and rooks (useful for castling)
-const int WK_START = e1;
 const int WLR_START = a1;
 const int WRR_START = h1;
 
-const int BK_START = e8;
 const int BLR_START = a8;
 const int BRR_START = h8;
 

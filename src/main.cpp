@@ -95,16 +95,15 @@ void draw_pieces(sf::RenderWindow &window, Board &b) {
 	}
 }
 
-void draw_moves(sf::RenderWindow &window, Board &b, int from) {
+void draw_moves(sf::RenderWindow &window, Board &b, int from,
+	std::vector<int> valid_moves) {
 	if (from == -1)
 		return;
 
-	std::vector<int> moves;
-	gen_moves(b, from, moves);
-	for (int move : moves) {
-		int valid = b.make_move(move);
-		b.unmake_move(move);
-		if (!valid) {
+	// Draw only valid moves where the move from matches "from"
+	for (int move : valid_moves) {
+		int move_from = get_from(move);
+		if (from != move_from) {
 			continue;
 		}
 
@@ -120,6 +119,26 @@ void draw_moves(sf::RenderWindow &window, Board &b, int from) {
 	}
 }
 
+std::vector<int> validate_moves(Board &b, std::vector<int> moves) {
+	std::vector<int> valid_moves;
+	for (int move : moves) {
+		if (b.make_move(move)) {
+			valid_moves.push_back(move);
+		}
+
+		b.unmake_move(move);
+	}
+
+	return valid_moves;
+}
+
+void print_move(int move) {
+	int from = get_from(move);
+	int to  = get_to(move);
+
+	std::cout << sq_to_chess(from) << " to " << sq_to_chess(to) << "\n";
+}
+
 int main(int argc, char* argv[]) {
 	std::string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	Board b;
@@ -127,23 +146,29 @@ int main(int argc, char* argv[]) {
 
 	if (argc > 2 && std::string(argv[1]).compare("perft") == 0) {
 		int depth = std::stoi(argv[2]);
-		std::cout << perft(depth, b, depth) << "\n";
+		std::cout << perft(b, depth) << "\n";
 		return 0;
 	}
-
-	print_board(b);
-	print_attr(b);
 
 	sf::RenderWindow window(sf::VideoMode(1500, 1500), "Chess");
     sf::Font font;
 	font.loadFromFile("assets/fonts/DejaVuSans.ttf");
 
+	std::cout << "\n\n------------------------------------------\n";
+	std::cout << "----------\tRUNNING GUI\t----------\n";
+	std::cout << "------------------------------------------\n\n";
+
+	// print_board(b);
+	// print_attr(b);
+
+	std::vector<int> valid_moves = validate_moves(b, gen_moves(b));
 	int from = -1;
 	int to = -1;
-	std::stack<int> moves;
+	std::stack<int> move_list;
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
+        	// Close
             if (event.type == sf::Event::Closed) {
                 window.close();
             }
@@ -160,35 +185,41 @@ int main(int argc, char* argv[]) {
         		if (0 <= col && col <= 7 && 0 <= row && row <= 7) {
 					if (from == -1 && to == -1) {
 						int sq = row * 8 + col;
+						// Only set "from" if the selected piece is on the
+						// side to move
 						if (b.piece[sq] != EMPTY && b.color[sq] == b.to_move) {
 							from = sq;
 						}
             		} else if (to == -1) {
 	            		to = row * 8 + col;
+	            		// Make sure "to" points to an empty square or enemy piece
 	            		if (b.piece[to] == EMPTY || b.color[to] != b.to_move) {
-	            			// TODO: fix this
-	            			std::vector<int> from_moves;
-	            			gen_moves(b, from, from_moves);
-	            			for (int from_move : from_moves) {
-	            				int move_to = get_to(from_move);
-	            				if (to == move_to) {
-			            			moves.push(from_move);
-			            			int valid = b.make_move(from_move);
+	            			// Find the correct move from valid_moves and make it
+	            			for (int move : valid_moves) {
+	            				int move_from = get_from(move);
+	            				int move_to = get_to(move);
+	            				if (from == move_from && to == move_to) {
+			            			move_list.push(move);
+			            			b.make_move(move);
+			            			print_move(move);
+			            			// print_board(b);
+			            			// print_attr(b);
 
-			            			if (!valid) {
-			            				b.unmake_move(from_move);
-			            			} else {
-				            			print_board(b);
-				            			print_attr(b);
-			            			}
-
+			            			// Regenerate valid moves after a successful
+			            			// move
+	            					valid_moves = validate_moves(b, gen_moves(b));
 			            			break;
 	            				}
 	            			}
 
+	            			// Reset "from" and "to" regardless of if the move
+	            			// was made
 	            			from = -1;
 	            			to = -1;
 	            		} else {
+	            			// If another friendly piece is selected, set "from"
+	            			// to that piece and reset "to"
+	            			// Makes piece selection more seamless
 	            			from = to;
 	            			to = -1;
 	            		}
@@ -199,12 +230,17 @@ int main(int argc, char* argv[]) {
             // Left arrow key (undo)
             if (event.type == sf::Event::KeyPressed
             	&& event.key.code == sf::Keyboard::Left) {
-            	if (!moves.empty()) {
-            		int move = moves.top();
-            		moves.pop();
+            	if (!move_list.empty()) {
+            		int move = move_list.top();
+            		move_list.pop();
             		b.unmake_move(move);
-            		print_board(b);
-			        print_attr(b);
+            		std::cout << "undo ";
+            		print_move(move);
+             		// print_board(b);
+			        // print_attr(b);
+
+			        // Regenerate valid moves after undo
+			        valid_moves = validate_moves(b, gen_moves(b));
             	}
             }
         }
@@ -212,7 +248,7 @@ int main(int argc, char* argv[]) {
     	window.clear(LIGHT);
         draw_board(window, font);
         draw_pieces(window, b);
-        draw_moves(window, b, from);
+        draw_moves(window, b, from, valid_moves);
         window.display();
     }
 

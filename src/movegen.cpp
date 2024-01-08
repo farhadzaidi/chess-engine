@@ -1,12 +1,9 @@
-#include <stdexcept>
-#include <iostream>
-
 #include "movegen.hpp"
 #include "constants.hpp"
 #include "board.hpp"
 #include "move.hpp"
 
-std::vector<int> gen_all_moves(Board &b) {
+std::vector<int> gen_moves(Board &b) {
 	std::vector<int> moves;
 	for (int sq : b.piece_squares[b.to_move]) {
 		switch (b.piece[sq]) {
@@ -34,31 +31,6 @@ std::vector<int> gen_all_moves(Board &b) {
 	return moves;
 }
 
-std::vector<int> gen_moves(Board &b, int sq, std::vector<int> &moves) {
-	switch (b.piece[sq]) {
-		case PAWN:
-			get_pawn_moves(b, sq, moves);
-			break;
-		case BISHOP:
-			get_piece_moves(b, sq, BISHOP_MOVES, 1, moves);
-			break;
-		case KNIGHT:
-			get_piece_moves(b, sq, KNIGHT_MOVES, 0, moves);
-			break;
-		case ROOK:
-			get_piece_moves(b, sq, ROOK_MOVES, 1, moves);
-			break;
-		case QUEEN:
-			get_piece_moves(b, sq, KING_QUEEN_MOVES, 1, moves);
-			break;
-		case KING:
-			get_piece_moves(b, sq, KING_QUEEN_MOVES, 0, moves);
-			break;
-	}
-
-	return moves;
-}
-
 void get_pawn_moves(Board &b, int sq, std::vector<int> &moves) {
 	// Set directions based on pawn's perspective
 	int is_white = b.color[sq] == WHITE ? 1 : 0;
@@ -70,19 +42,17 @@ void get_pawn_moves(Board &b, int sq, std::vector<int> &moves) {
 	int start_row = is_white ? 6 : 1;
 	int last_row = is_white ? 0 : 7;
 
-	if (sq / 8 == last_row) {
-		throw std::runtime_error("Pawn cannot be on last rank!");
-	}
-
 	// Check if pawn can move north
 	int north_sq = b.get_mailbox_num(sq, north);
 	if (b.in_bounds(north_sq) && b.is_empty(north_sq)) {
 		// Generate promotion moves
 		if (north_sq / 8 == last_row) {
+			// **Creating the queen promotion move first ensures autopromotion
+			// to queen in the GUI
+			moves.push_back(new_move(sq, north_sq, QUIET, P_QUEEN));
 			moves.push_back(new_move(sq, north_sq, QUIET, P_BISHOP));
 			moves.push_back(new_move(sq, north_sq, QUIET, P_KNIGHT));
 			moves.push_back(new_move(sq, north_sq, QUIET, P_ROOK));
-			moves.push_back(new_move(sq, north_sq, QUIET, P_QUEEN));
 		} else {
 			moves.push_back(new_move(sq, north_sq, QUIET, NORMAL));
 		}
@@ -102,14 +72,14 @@ void get_pawn_moves(Board &b, int sq, std::vector<int> &moves) {
 			if (!b.is_empty(cap_sq) && b.diff_colors(sq, cap_sq)) {
 				// Generate promotion moves
 				if (cap_sq / 8 == last_row) {
+					moves.push_back(new_move(sq, cap_sq, CAPTURE, P_QUEEN));
 					moves.push_back(new_move(sq, cap_sq, CAPTURE, P_BISHOP));
 					moves.push_back(new_move(sq, cap_sq, CAPTURE, P_KNIGHT));
 					moves.push_back(new_move(sq, cap_sq, CAPTURE, P_ROOK));
-					moves.push_back(new_move(sq, cap_sq, CAPTURE, P_QUEEN));
 				} else {
 					moves.push_back(new_move(sq, cap_sq, CAPTURE, NORMAL));
 				}
-			// en passant capture
+			// En passant capture
 			} else if (cap_sq == b.enpas_sq.top()) {
 				moves.push_back(new_move(sq, cap_sq, CAPTURE, EN_PASSANT));
 			}
@@ -133,12 +103,15 @@ void get_piece_moves(Board &b, int sq, const int directions[8], int slide,
 			if (b.is_empty(nxt_sq)) {
 				moves.push_back(new_move(sq, nxt_sq, QUIET, NORMAL));
 			} else {
+				// Else check if the occupying piece is an enemy or friendly
+				// piece to see if we can create a capture move
 				if (b.diff_colors(sq, nxt_sq)) {
 					moves.push_back(new_move(sq, nxt_sq, CAPTURE, NORMAL));
 				} 
 				break;
 			}
 
+			// No need to keep looping for non-sliding pieces (king/knight)
 			if (!slide) {
 				break;
 			}
@@ -148,26 +121,35 @@ void get_piece_moves(Board &b, int sq, const int directions[8], int slide,
 	}
 
 	if (b.piece[sq] == KING) {
-		// check castling rights, gen respective castling move
-		int right_rook_start= b.to_move == WHITE ? WRR_START : BRR_START;
-		int left_rook_start = b.to_move == WHITE ? WLR_START : BLR_START;
-		int short_castling_right = b.to_move == WHITE ? W_SHORT : B_SHORT;
-		int long_castling_right = b.to_move == WHITE ? W_LONG : B_LONG;
+		int is_white = b.to_move == WHITE;
+		int right_rook_start= is_white ? WRR_START : BRR_START;
+		int left_rook_start = is_white ? WLR_START : BLR_START;
+		int short_castling_right = is_white ? W_SHORT : B_SHORT;
+		int long_castling_right = is_white ? W_LONG : B_LONG;
 
-		if (b.castling_rights & short_castling_right
-			&& b.is_empty(b.king_squares[b.to_move] + 1)
-			&& b.is_empty(b.king_squares[b.to_move] + 2)
-			&& b.piece[right_rook_start] == ROOK
-			&& b.color[right_rook_start] == b.to_move) {
+		// Ensure 3 conditions before creating castling move:
+			// We have the respective castling right
+			// The squares between the king and the respective rook are empty
+			// The same-colored rook is at its starting position
+
+		if (
+				b.castling_rights & short_castling_right
+				&& b.is_empty(b.king_squares[b.to_move] + 1)
+				&& b.is_empty(b.king_squares[b.to_move] + 2)
+				&& b.piece[right_rook_start] == ROOK
+				&& b.color[right_rook_start] == b.to_move
+			) {
 			moves.push_back(new_move(sq, sq + 2, QUIET, CASTLE));
 		}
 
-		if (b.castling_rights & long_castling_right
-			&& b.is_empty(b.king_squares[b.to_move] - 1)
-			&& b.is_empty(b.king_squares[b.to_move] - 2)
-			&& b.is_empty(b.king_squares[b.to_move] - 3)
-			&& b.piece[left_rook_start] == ROOK
-			&& b.color[left_rook_start] == b.to_move) {
+		if (
+				b.castling_rights & long_castling_right
+				&& b.is_empty(b.king_squares[b.to_move] - 1)
+				&& b.is_empty(b.king_squares[b.to_move] - 2)
+				&& b.is_empty(b.king_squares[b.to_move] - 3)
+				&& b.piece[left_rook_start] == ROOK
+				&& b.color[left_rook_start] == b.to_move
+			) {
 			moves.push_back(new_move(sq, sq - 2, QUIET, CASTLE));
 		}
 	}
