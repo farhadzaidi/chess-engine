@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include <stack>
 #include <vector>
+#include <cmath>
+#include <chrono>
 
 #include "SFML/Graphics.hpp"
 #include "constants.hpp"
@@ -140,16 +142,38 @@ void print_move(int move) {
 }
 
 int main(int argc, char* argv[]) {
+	// Initialize board
 	std::string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	Board b;
 	load_from_FEN(b, FEN);
 
+	// Perft
 	if (argc > 2 && std::string(argv[1]).compare("perft") == 0) {
 		std::cout << "\nMove Generation Performance Test\n";
 		int depth = std::stoi(argv[2]);
-		std::cout << perft(b, depth) << " nodes generated at depth " << depth << "\n";
+
+		auto start = std::chrono::high_resolution_clock::now();
+		int nodes = perft(b, depth);
+		auto end = std::chrono::high_resolution_clock::now();
+		auto elapsed = std::chrono::duration<double>(end - start);
+		
+		int expected_nodes = perft_expected[depth];
+		std::cout << nodes << " nodes generated at depth " << depth
+			<< " in " << elapsed.count() << " seconds\n";
+
+		if (nodes == expected_nodes) {
+			std::cout << "Expected result\n";
+		} else {
+			int diff = abs(nodes - expected_nodes);
+			std::cout << "Unexpected result (off by " << diff << ")\n";
+			std::cout << "Expected result: " << expected_nodes << "\n";
+		}
+
 		return 0;
 	}
+
+	// int engine_side = BLACK;
+	// int player_side = WHITE;
 
 	sf::RenderWindow window(sf::VideoMode(1500, 1500), "Chess");
     sf::Font font;

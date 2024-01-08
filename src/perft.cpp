@@ -1,12 +1,7 @@
 #include <vector>
-#include <iostream>
-#include <string>
 
 #include "perft.hpp"
-#include "constants.hpp"
-#include "move.hpp"
 #include "movegen.hpp"
-#include "repr.hpp"
 
 class Board;
 

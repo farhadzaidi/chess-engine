@@ -1,9 +1,8 @@
+#include <cmath>
+
 #include "board.hpp"
 #include "constants.hpp"
 #include "move.hpp"
-
-#include <iostream>
-#include <cmath>
 
 Board::Board() {}
 
@@ -23,8 +22,9 @@ int Board::make_move(int move) {
 	}
 
 	if (mtype == CAPTURE) {
-		// Change square of captured piece to south of "to" if the move type is
-		// en passant
+		// Handle capture logic slightly differently for en passant
+			// Captured piece is south of "to"
+			// Captured piece square needs to be emptied 
 		int cap_sq = to;
 		if (flag == EN_PASSANT) {
 			cap_sq += south;
@@ -38,14 +38,20 @@ int Board::make_move(int move) {
 		piece_squares[!to_move].erase(cap_sq);
 	}
 
+	// Adjust moving piece square in piece_squares
 	piece_squares[to_move].erase(from);
 	piece_squares[to_move].insert(to);
 
+	// Move piece to "to" and empty "from"
 	piece[to] = piece[from];
 	color[to] = color[from];
 	piece[from] = EMPTY;
 	color[from] = EMPTY;
 
+	// For castling, simply move rook to right or left of king based
+	// on whether the move is a short or long castle
+	// Also, empty rook's old position and adjust piece_squares
+	// for the moving rook
 	if (flag == CASTLE) {
 		valid &= !is_attacked(from);
 
@@ -119,6 +125,8 @@ void Board::unmake_move(int move) {
 	piece_squares[to_move].insert(from);
 
 	if (mtype == CAPTURE) {
+		// Capture logic is mostly same for normal captures and en passant,
+		// just change the capture square
 		int south = to_move == WHITE ? 8 : -8;
 		int cap_sq = flag == EN_PASSANT ? to + south : to;
 
@@ -131,6 +139,7 @@ void Board::unmake_move(int move) {
 
 	if (flag == CASTLE) {
 		// Same as in make_move, just switch current and new rook positions
+		// and adjust piece_squares
 		int new_rook_pos;
 		int cur_rook_pos;
 		// Long castle
@@ -164,6 +173,7 @@ void Board::unmake_move(int move) {
 		color[to] = EMPTY;
 	}
 
+	// Pop the latest castling rights update and revert it
 	int castling_rights_update = castling_rights_updates.top();
 	castling_rights_updates.pop();
 	castling_rights |= castling_rights_update;
