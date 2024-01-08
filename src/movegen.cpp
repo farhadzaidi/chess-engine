@@ -6,8 +6,35 @@
 #include "board.hpp"
 #include "move.hpp"
 
-std::vector<int> gen_moves(Board &b, int sq) {
+std::vector<int> gen_all_moves(Board &b) {
 	std::vector<int> moves;
+	for (int sq : b.piece_squares[b.to_move]) {
+		switch (b.piece[sq]) {
+			case PAWN:
+				get_pawn_moves(b, sq, moves);
+				break;
+			case BISHOP:
+				get_piece_moves(b, sq, BISHOP_MOVES, 1, moves);
+				break;
+			case KNIGHT:
+				get_piece_moves(b, sq, KNIGHT_MOVES, 0, moves);
+				break;
+			case ROOK:
+				get_piece_moves(b, sq, ROOK_MOVES, 1, moves);
+				break;
+			case QUEEN:
+				get_piece_moves(b, sq, KING_QUEEN_MOVES, 1, moves);
+				break;
+			case KING:
+				get_piece_moves(b, sq, KING_QUEEN_MOVES, 0, moves);
+				break;
+		}
+	}
+
+	return moves;
+}
+
+std::vector<int> gen_moves(Board &b, int sq, std::vector<int> &moves) {
 	switch (b.piece[sq]) {
 		case PAWN:
 			get_pawn_moves(b, sq, moves);
@@ -122,19 +149,25 @@ void get_piece_moves(Board &b, int sq, const int directions[8], int slide,
 
 	if (b.piece[sq] == KING) {
 		// check castling rights, gen respective castling move
+		int right_rook_start= b.to_move == WHITE ? WRR_START : BRR_START;
+		int left_rook_start = b.to_move == WHITE ? WLR_START : BLR_START;
 		int short_castling_right = b.to_move == WHITE ? W_SHORT : B_SHORT;
 		int long_castling_right = b.to_move == WHITE ? W_LONG : B_LONG;
 
 		if (b.castling_rights & short_castling_right
-			&& b.piece[b.king_squares[b.to_move] + 1] == EMPTY
-			&& b.piece[b.king_squares[b.to_move] + 2] == EMPTY) {
+			&& b.is_empty(b.king_squares[b.to_move] + 1)
+			&& b.is_empty(b.king_squares[b.to_move] + 2)
+			&& b.piece[right_rook_start] == ROOK
+			&& b.color[right_rook_start] == b.to_move) {
 			moves.push_back(new_move(sq, sq + 2, QUIET, CASTLE));
 		}
 
 		if (b.castling_rights & long_castling_right
-			&& b.piece[b.king_squares[b.to_move] - 1] == EMPTY
-			&& b.piece[b.king_squares[b.to_move] - 2] == EMPTY
-			&& b.piece[b.king_squares[b.to_move] - 3] == EMPTY) {
+			&& b.is_empty(b.king_squares[b.to_move] - 1)
+			&& b.is_empty(b.king_squares[b.to_move] - 2)
+			&& b.is_empty(b.king_squares[b.to_move] - 3)
+			&& b.piece[left_rook_start] == ROOK
+			&& b.color[left_rook_start] == b.to_move) {
 			moves.push_back(new_move(sq, sq - 2, QUIET, CASTLE));
 		}
 	}

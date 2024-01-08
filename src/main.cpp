@@ -10,6 +10,7 @@
 #include "repr.hpp"
 #include "move.hpp"
 #include "movegen.hpp"
+#include "perft.hpp"
 
 sf::Color LIGHT(245, 245, 245);
 sf::Color DARK(46, 46, 56);
@@ -98,8 +99,15 @@ void draw_moves(sf::RenderWindow &window, Board &b, int from) {
 	if (from == -1)
 		return;
 
-	std::vector<int> moves = gen_moves(b, from);
+	std::vector<int> moves;
+	gen_moves(b, from, moves);
 	for (int move : moves) {
+		int valid = b.make_move(move);
+		b.unmake_move(move);
+		if (!valid) {
+			continue;
+		}
+
 		int to = get_to(move);
 		int row = to / 8;
 		int col = to % 8;
@@ -113,11 +121,16 @@ void draw_moves(sf::RenderWindow &window, Board &b, int from) {
 }
 
 int main(int argc, char* argv[]) {
-	// TODO: Implement auto promote to queen
-
 	std::string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	Board b;
 	load_from_FEN(b, FEN);
+
+	if (argc > 2 && std::string(argv[1]).compare("perft") == 0) {
+		int depth = std::stoi(argv[2]);
+		std::cout << perft(depth, b, depth) << "\n";
+		return 0;
+	}
+
 	print_board(b);
 	print_attr(b);
 
@@ -153,22 +166,22 @@ int main(int argc, char* argv[]) {
             		} else if (to == -1) {
 	            		to = row * 8 + col;
 	            		if (b.piece[to] == EMPTY || b.color[to] != b.to_move) {
-	            			std::vector<int> from_moves = gen_moves(b, from);
+	            			// TODO: fix this
+	            			std::vector<int> from_moves;
+	            			gen_moves(b, from, from_moves);
 	            			for (int from_move : from_moves) {
 	            				int move_to = get_to(from_move);
 	            				if (to == move_to) {
 			            			moves.push(from_move);
-			            			b.make_move(from_move);
-			            			print_board(b);
-			            			print_attr(b);
+			            			int valid = b.make_move(from_move);
 
-			            			// std::cout << "enpas stack: \n";
-			            			// std::stack<int> temp = b.enpas_sq;
-			            			// while (!temp.empty()) {
-			            			// 	std::cout << temp.top() << ", ";
-			            			// 	temp.pop();
-			            			// }
-			            			// std::cout << "\n";
+			            			if (!valid) {
+			            				b.unmake_move(from_move);
+			            			} else {
+				            			print_board(b);
+				            			print_attr(b);
+			            			}
+
 			            			break;
 	            				}
 	            			}
@@ -192,13 +205,6 @@ int main(int argc, char* argv[]) {
             		b.unmake_move(move);
             		print_board(b);
 			        print_attr(b);
-    			    // std::cout << "enpas stack: \n";
-        			// std::stack<int> temp = b.enpas_sq;
-        			// while (!temp.empty()) {
-        			// 	std::cout << temp.top() << ", ";
-        			// 	temp.pop();
-        			// }
-        			// std::cout << "\n";
             	}
             }
         }
@@ -212,3 +218,5 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+
+

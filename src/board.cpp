@@ -5,44 +5,16 @@
 #include <iostream>
 #include <cmath>
 
-// NOTES:
-	// A fair amount of branching in make_move and unmake_move since I am trying
-	// to keep all the logic limited to one function each
-	// I could potentially see performance improvements by creating separate
-	// functions for each move type (normal, en passant, castle, promotion) and
-	// using a switch statement for the flag.
-	// More code, but it could be faster and (maybe) easier to understand
-
 Board::Board() {}
 
-int Board::in_bounds(int sq) {
-	return sq != -1;
-}
-
-int Board::is_empty(int sq) {
-	return piece[sq] == EMPTY;
-}
-
-int Board::diff_colors(int sq1, int sq2) {
-	return color[sq1] ^ color[sq2];
-}
-
-int Board::get_mailbox_num(int sq, int offset) {
-	return mailbox[mailbox64[sq] + offset];
-}
+// TODO: split up make_move and unmake_move into different functions
 
 int Board::make_move(int move) {
-	// TODO:
-		// validate castle using is_attacked
-			// check if "king_sq" is attacked
-			// (final king_sq pos gets checked at the end)
-			// for short castle, check if from + 1 is attacked
-			// for long castle, check if from - 1 is attacked
 	int from = get_from(move);
 	int to = get_to(move);
 	int mtype = get_mtype(move);
 	int flag = get_flag(move);
-	// int valid = 1;
+	int valid = 1;
 
 	// Set en passant target square if pawn moves two squares
 	int south = to_move == WHITE ? 8 : -8;
@@ -58,12 +30,14 @@ int Board::make_move(int move) {
 		int cap_sq = to;
 		if (flag == EN_PASSANT) {
 			cap_sq += south;
+			captured_pieces[to_move].push(piece[cap_sq]);
 			piece[cap_sq] = EMPTY;
 			color[cap_sq] = EMPTY;
+		} else {
+			captured_pieces[to_move].push(piece[cap_sq]);
 		}
 
 		piece_squares[!to_move].erase(cap_sq);
-		captured_pieces[to_move].push(piece[cap_sq]);
 	}
 
 	piece_squares[to_move].erase(from);
@@ -75,13 +49,17 @@ int Board::make_move(int move) {
 	color[from] = EMPTY;
 
 	if (flag == CASTLE) {
+		valid &= !is_attacked(from, to_move);
+
 		int new_rook_pos;
 		int cur_rook_pos;
 		// Long castle
 		if (from > to) {
+			valid &= !is_attacked(from - 1, to_move);
 			new_rook_pos = to + 1;
 			cur_rook_pos = to_move == WHITE ? WLR_START : BLR_START;
 		} else { // Short castle
+			valid &= !is_attacked(from + 1, to_move);
 			new_rook_pos = to - 1;
 			cur_rook_pos = to_move == WHITE ? WRR_START : BRR_START;
 		}
@@ -116,11 +94,13 @@ int Board::make_move(int move) {
 		king_squares[to_move] = to;
 	}
 
+	// Validate move
+	valid &= !is_attacked(king_squares[to_move], to_move);
+
 	// Switch turn
 	to_move = !to_move;
 
-	// TODO: Validate move using is_attacked
-	return 1;
+	return valid;
 }
 
 void Board::unmake_move(int move) {
@@ -216,12 +196,12 @@ void Board::update_castling_rights(int moving_piece, int side) {
 		}
 
 		if (moving_piece == ROOK) {
-			if (castling_rights & short_right && piece[rr_start] == EMPTY) {
+			if (castling_rights & short_right && is_empty(rr_start)) {
 				castling_rights ^= short_right;
 				update |= short_right;
 			}
 
-			if (castling_rights & long_right && piece[lr_start] == EMPTY) {
+			if (castling_rights & long_right && is_empty(lr_start)) {
 				castling_rights ^= long_right;
 				update |= long_right;
 			}	
@@ -230,34 +210,79 @@ void Board::update_castling_rights(int moving_piece, int side) {
 	castling_rights_updates.push(update);
 }
 
-// int is_attacked(int sq) {
+int Board::is_attacked(int sq, int side) {
+	const int DIAGNAL_ATTACKERS[2] = {QUEEN, BISHOP};
+	if (is_attacked_helper(sq, BISHOP_MOVES, 1, DIAGNAL_ATTACKERS, !side))
+		return 1;
 
-// }
+	const int STRAIGHT_ATTACKERS[2] = {QUEEN, ROOK};
+	if (is_attacked_helper(sq, ROOK_MOVES, 1, STRAIGHT_ATTACKERS, !side))
+		return 1;
 
-// for (int i = 0; i < 8; i++) {
-// 	// Not all pieces have 8 move directions
-// 	// Break the loop when the current piece has no more directions 
-// 	if (directions[i] == 0) {
-// 		break;
-// 	}
+	const int KNIGHT_ATTACKER[2] = {KNIGHT, 0};
+	if (is_attacked_helper(sq, KNIGHT_MOVES, 0, KNIGHT_ATTACKER, !side))
+		return 1;
 
-// 	// Compute the next (to) square based on directions
-// 	int nxt_sq = b.get_mailbox_num(sq, directions[i]);
-// 	while (b.in_bounds(nxt_sq)) {
-// 		// If the next square is empty, create the move and keep going
-// 		if (b.is_empty(nxt_sq)) {
-// 			moves.push_back(new_move(sq, nxt_sq, QUIET, NORMAL));
-// 		} else {
-// 			if (b.diff_colors(sq, nxt_sq)) {
-// 				moves.push_back(new_move(sq, nxt_sq, CAPTURE, NORMAL));
-// 			} 
-// 			break;
-// 		}
+	const int KING_ATTACKER[2] = {KING, 0};
+	if (is_attacked_helper(sq, KING_QUEEN_MOVES, 0, KING_ATTACKER, !side))
+		return 1;
 
-// 		if (!slide) {
-// 			break;
-// 		}
+	const int PAWN_ATTACKER[2] = {PAWN, 0};
+	const int PAWN_ATTACKS[8] = {
+	    (side == WHITE) ? -11 : 11,
+	    (side == WHITE) ? -9 : 9,
+	    0, 0, 0, 0, 0, 0
+	};
 
-// 		nxt_sq = b.get_mailbox_num(nxt_sq, directions[i]);
-// 	}
-// }
+	return is_attacked_helper(sq, PAWN_ATTACKS, 0, PAWN_ATTACKER, !side);
+}
+
+int Board::is_attacked_helper(int sq, const int directions[8], int slide, 
+	const int attackers[2], int attacking_side) {
+	for (int i = 0; i < 8; i++) {
+		if (directions[i] == 0) {
+			break;
+		}
+
+		int nxt_sq = get_mailbox_num(sq, directions[i]);
+		while (in_bounds(nxt_sq)) {
+			if (!is_empty(nxt_sq)) {
+				if (color[nxt_sq] == attacking_side) {
+					for (int j = 0; j < 2; j++) {
+ 						if (piece[nxt_sq] == attackers[j]) {
+							return 1;
+						}
+					}
+				}
+
+				break;
+			}
+
+			if (!slide) {
+				break;
+			}
+
+			nxt_sq = get_mailbox_num(nxt_sq, directions[i]);
+		}
+	}
+
+	return 0;
+}
+
+// HELPER FUNCTIONS
+
+int Board::in_bounds(int sq) {
+	return sq != -1;
+}
+
+int Board::is_empty(int sq) {
+	return piece[sq] == EMPTY;
+}
+
+int Board::diff_colors(int sq1, int sq2) {
+	return color[sq1] ^ color[sq2];
+}
+
+int Board::get_mailbox_num(int sq, int offset) {
+	return mailbox[mailbox64[sq] + offset];
+}
