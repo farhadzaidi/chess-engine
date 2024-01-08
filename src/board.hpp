@@ -56,10 +56,11 @@ public:
 
     int make_move(int move);
     void unmake_move(int move);
-    void update_castling_rights(int moving_piece, int side);
-    int is_attacked(int sq, int side);
-    int is_attacked_helper(int sq, const int directions[8], int slide, 
-        const int attackers[2], int attacking_side);
+    void update_castling_rights(int moving_piece);
+    int is_attacked(int sq);
+    // int is_attacked_helper(int sq, const int directions[8], int slide, 
+    //     const int attackers[2]);
+    int is_attacked_helper(int sq, const int directions[8], const int attack_info[3]);
 
     int in_bounds(int sq);
     int is_empty(int sq);

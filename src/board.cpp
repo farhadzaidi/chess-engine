@@ -7,8 +7,6 @@
 
 Board::Board() {}
 
-// TODO: split up make_move and unmake_move into different functions
-
 int Board::make_move(int move) {
 	int from = get_from(move);
 	int to = get_to(move);
@@ -49,17 +47,17 @@ int Board::make_move(int move) {
 	color[from] = EMPTY;
 
 	if (flag == CASTLE) {
-		valid &= !is_attacked(from, to_move);
+		valid &= !is_attacked(from);
 
 		int new_rook_pos;
 		int cur_rook_pos;
 		// Long castle
 		if (from > to) {
-			valid &= !is_attacked(from - 1, to_move);
+			valid &= !is_attacked(from - 1);
 			new_rook_pos = to + 1;
 			cur_rook_pos = to_move == WHITE ? WLR_START : BLR_START;
 		} else { // Short castle
-			valid &= !is_attacked(from + 1, to_move);
+			valid &= !is_attacked(from + 1);
 			new_rook_pos = to - 1;
 			cur_rook_pos = to_move == WHITE ? WRR_START : BRR_START;
 		}
@@ -88,14 +86,14 @@ int Board::make_move(int move) {
 			break;
 	}
 
-	update_castling_rights(piece[to], to_move);
+	update_castling_rights(piece[to]);
 
 	if (piece[to] == KING) {
 		king_squares[to_move] = to;
 	}
 
 	// Validate move
-	valid &= !is_attacked(king_squares[to_move], to_move);
+	valid &= !is_attacked(king_squares[to_move]);
 
 	// Switch turn
 	to_move = !to_move;
@@ -175,70 +173,79 @@ void Board::unmake_move(int move) {
 	}
 }
 
-void Board::update_castling_rights(int moving_piece, int side) {
+void Board::update_castling_rights(int moving_piece) {
 	int update = 0;
 	if (castling_rights) {
-		int short_right = side == WHITE ? W_SHORT : B_SHORT;
-		int long_right = side == WHITE ? W_LONG : B_LONG;
-		int rr_start = side == WHITE ? WRR_START : BRR_START;
-		int lr_start = side == WHITE ? WLR_START : BLR_START;
+		int is_white = to_move == WHITE;
+		int short_castling_right = is_white ? W_SHORT : B_SHORT;
+		int long_castling_right = is_white ? W_LONG : B_LONG;
+		int right_rook_start = is_white ? WRR_START : BRR_START;
+		int left_rook_start = is_white ? WLR_START : BLR_START;
 
 		if (moving_piece == KING) {
-			if (castling_rights & short_right) {
-				castling_rights ^= short_right;
-				update |= short_right;
+			if (castling_rights & short_castling_right) {
+				castling_rights ^= short_castling_right;
+				update |= short_castling_right;
 			}
 
-			if (castling_rights & long_right) {
-				castling_rights ^= long_right;
-				update |= long_right;
+			if (castling_rights & long_castling_right) {
+				castling_rights ^= long_castling_right;
+				update |= long_castling_right;
 			}
 		}
 
 		if (moving_piece == ROOK) {
-			if (castling_rights & short_right && is_empty(rr_start)) {
-				castling_rights ^= short_right;
-				update |= short_right;
+			if (castling_rights & short_castling_right 
+					&& is_empty(right_rook_start)) {
+				castling_rights ^= short_castling_right;
+				update |= short_castling_right;
 			}
 
-			if (castling_rights & long_right && is_empty(lr_start)) {
-				castling_rights ^= long_right;
-				update |= long_right;
+			if (castling_rights & long_castling_right 
+					&& is_empty(left_rook_start)) {
+				castling_rights ^= long_castling_right;
+				update |= long_castling_right;
 			}	
 		}
 	}
 	castling_rights_updates.push(update);
 }
 
-int Board::is_attacked(int sq, int side) {
-	const int DIAGNAL_ATTACKERS[2] = {QUEEN, BISHOP};
-	if (is_attacked_helper(sq, BISHOP_MOVES, 1, DIAGNAL_ATTACKERS, !side))
+int Board::is_attacked(int sq) {
+	if (is_attacked_helper(sq, BISHOP_MOVES, DIAGNAL_ATTACK_INFO))
 		return 1;
 
-	const int STRAIGHT_ATTACKERS[2] = {QUEEN, ROOK};
-	if (is_attacked_helper(sq, ROOK_MOVES, 1, STRAIGHT_ATTACKERS, !side))
+	if (is_attacked_helper(sq, ROOK_MOVES, STRAIGHT_ATTACK_INFO))
 		return 1;
 
-	const int KNIGHT_ATTACKER[2] = {KNIGHT, 0};
-	if (is_attacked_helper(sq, KNIGHT_MOVES, 0, KNIGHT_ATTACKER, !side))
+	if (is_attacked_helper(sq, KNIGHT_MOVES, KNIGHT_ATTACK_INFO))
 		return 1;
 
-	const int KING_ATTACKER[2] = {KING, 0};
-	if (is_attacked_helper(sq, KING_QUEEN_MOVES, 0, KING_ATTACKER, !side))
+	if (is_attacked_helper(sq, KING_QUEEN_MOVES, KING_ATTACK_INFO))
 		return 1;
 
-	const int PAWN_ATTACKER[2] = {PAWN, 0};
+	const int PAWN_ATTACK_INFO[3] = {PAWN, 0, 0};
+	// Pawn attacks change based on side
 	const int PAWN_ATTACKS[8] = {
-	    (side == WHITE) ? -11 : 11,
-	    (side == WHITE) ? -9 : 9,
+	    (to_move == WHITE) ? -11 : 11,
+	    (to_move == WHITE) ? -9 : 9,
 	    0, 0, 0, 0, 0, 0
 	};
 
-	return is_attacked_helper(sq, PAWN_ATTACKS, 0, PAWN_ATTACKER, !side);
+	return is_attacked_helper(sq, PAWN_ATTACKS, PAWN_ATTACK_INFO);
 }
 
-int Board::is_attacked_helper(int sq, const int directions[8], int slide, 
-	const int attackers[2], int attacking_side) {
+// Creates attack rays from the square to see if they intersect with the 
+// respective enemy attacking piece. If so, this piece is attacked
+// e.g. if diagnal rays from the given square intersect with an enemy
+// bishop or queen, then this piece is attacked.
+// Also takes into account nonsliding attacks including pawns
+int Board::is_attacked_helper(int sq, const int directions[8], 
+	const int attack_info[3]) {
+	// Very similar code to piece_move_gen, but this time
+	// we are interested in determining if the square is attacked 
+	int slide = attack_info[2];
+
 	for (int i = 0; i < 8; i++) {
 		if (directions[i] == 0) {
 			break;
@@ -247,17 +254,23 @@ int Board::is_attacked_helper(int sq, const int directions[8], int slide,
 		int nxt_sq = get_mailbox_num(sq, directions[i]);
 		while (in_bounds(nxt_sq)) {
 			if (!is_empty(nxt_sq)) {
-				if (color[nxt_sq] == attacking_side) {
+				// Check if the occupying piece is an enemy piece
+				if (color[nxt_sq] != to_move) {
+					// If so, check if the occupying piece is one of the
+					// respective attackers (of this direction)
 					for (int j = 0; j < 2; j++) {
- 						if (piece[nxt_sq] == attackers[j]) {
+ 						if (piece[nxt_sq] == attack_info[j]) {
 							return 1;
 						}
 					}
 				}
 
+				// If the square is not empty, and not an attacker, break
+				// and move onto the next direction
 				break;
 			}
 
+			// No need to keep looping for nonsliding pieces
 			if (!slide) {
 				break;
 			}

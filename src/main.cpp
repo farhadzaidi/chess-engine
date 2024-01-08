@@ -136,7 +136,7 @@ void print_move(int move) {
 	int from = get_from(move);
 	int to  = get_to(move);
 
-	std::cout << sq_to_chess(from) << " to " << sq_to_chess(to) << "\n";
+	std::cout << sq_to_chess(from) << sq_to_chess(to) << "\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -145,8 +145,9 @@ int main(int argc, char* argv[]) {
 	load_from_FEN(b, FEN);
 
 	if (argc > 2 && std::string(argv[1]).compare("perft") == 0) {
+		std::cout << "\nMove Generation Performance Test\n";
 		int depth = std::stoi(argv[2]);
-		std::cout << perft(b, depth) << "\n";
+		std::cout << perft(b, depth) << " nodes generated at depth " << depth << "\n";
 		return 0;
 	}
 

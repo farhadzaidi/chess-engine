@@ -61,4 +61,13 @@ const int WRR_START = h1;
 const int BLR_START = a8;
 const int BRR_START = h8;
 
+// Useful info for determining if a piece is attacked
+// First two elements are the attackers, and the last element
+// determines whether the attackers are sliding pieces or not
+const int DIAGNAL_ATTACK_INFO[3] = {QUEEN, BISHOP, 1};
+const int STRAIGHT_ATTACK_INFO[3] = {QUEEN, ROOK, 1};
+const int KNIGHT_ATTACK_INFO[3] = {KNIGHT, 0, 0};
+const int KING_ATTACK_INFO[3] = {KING, 0, 0};
+
+
 #endif
