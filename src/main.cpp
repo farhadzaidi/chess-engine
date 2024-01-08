@@ -5,6 +5,7 @@
 #include <vector>
 #include <cmath>
 #include <chrono>
+#include <utility>
 
 #include "SFML/Graphics.hpp"
 #include "constants.hpp"
@@ -13,6 +14,8 @@
 #include "move.hpp"
 #include "movegen.hpp"
 #include "perft.hpp"
+#include "search.hpp"
+#include "evaluation.hpp"
 
 sf::Color LIGHT(245, 245, 245);
 sf::Color DARK(46, 46, 56);
@@ -121,24 +124,21 @@ void draw_moves(sf::RenderWindow &window, Board &b, int from,
 	}
 }
 
-std::vector<int> validate_moves(Board &b, std::vector<int> moves) {
-	std::vector<int> valid_moves;
-	for (int move : moves) {
-		if (b.make_move(move)) {
-			valid_moves.push_back(move);
-		}
-
-		b.unmake_move(move);
-	}
-
-	return valid_moves;
-}
-
 void print_move(int move) {
 	int from = get_from(move);
 	int to  = get_to(move);
 
 	std::cout << sq_to_chess(from) << sq_to_chess(to) << "\n";
+}
+
+int engine_move(Board &b) {
+	int depth = 4;
+	std::pair<int, int> best_move_eval = minimax(b, depth);
+	int from = get_from(best_move_eval.first);
+	int to = get_from(best_move_eval.first);
+	std::cout << "best move: " << from << " to " << to << "\n";
+	std::cout << "eval: " << best_move_eval.second << "\n";
+	return best_move_eval.first;
 }
 
 int main(int argc, char* argv[]) {
@@ -172,8 +172,8 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 
-	// int engine_side = BLACK;
-	// int player_side = WHITE;
+	int engine_side = BLACK;
+	int player_side = WHITE;
 
 	sf::RenderWindow window(sf::VideoMode(1500, 1500), "Chess");
     sf::Font font;
@@ -212,13 +212,13 @@ int main(int argc, char* argv[]) {
 						int sq = row * 8 + col;
 						// Only set "from" if the selected piece is on the
 						// side to move
-						if (b.piece[sq] != EMPTY && b.color[sq] == b.to_move) {
+						if (b.piece[sq] != EMPTY && b.color[sq] == player_side) {
 							from = sq;
 						}
             		} else if (to == -1) {
 	            		to = row * 8 + col;
 	            		// Make sure "to" points to an empty square or enemy piece
-	            		if (b.piece[to] == EMPTY || b.color[to] != b.to_move) {
+	            		if (b.piece[to] == EMPTY || b.color[to] != player_side) {
 	            			// Find the correct move from valid_moves and make it
 	            			for (int move : valid_moves) {
 	            				int move_from = get_from(move);
@@ -227,12 +227,11 @@ int main(int argc, char* argv[]) {
 			            			move_list.push(move);
 			            			b.make_move(move);
 			            			print_move(move);
+
+			            			int engine_eval = eval(b);
+			            			std::cout << "eval: " << engine_eval << "\n\n";
 			            			// print_board(b);
 			            			// print_attr(b);
-
-			            			// Regenerate valid moves after a successful
-			            			// move
-	            					valid_moves = validate_moves(b, gen_moves(b));
 			            			break;
 	            				}
 	            			}
@@ -255,18 +254,22 @@ int main(int argc, char* argv[]) {
             // Left arrow key (undo)
             if (event.type == sf::Event::KeyPressed
             	&& event.key.code == sf::Keyboard::Left) {
-            	if (!move_list.empty()) {
-            		int move = move_list.top();
-            		move_list.pop();
-            		b.unmake_move(move);
-            		std::cout << "undo ";
-            		print_move(move);
-             		// print_board(b);
-			        // print_attr(b);
-
-			        // Regenerate valid moves after undo
-			        valid_moves = validate_moves(b, gen_moves(b));
+            	// Undo twice to undo engine move and then player move
+            	for (int i = 0; i < 2; i++) {
+					if (!move_list.empty()) {
+	            		int move = move_list.top();
+	            		move_list.pop();
+	            		b.unmake_move(move);
+	            		std::cout << "undo ";
+	            		print_move(move);
+            		}
             	}
+
+				// print_board(b);
+		        // print_attr(b);
+
+		        // Regenerate valid moves after undo
+		        valid_moves = validate_moves(b, gen_moves(b));
             }
         }
 
@@ -275,6 +278,18 @@ int main(int argc, char* argv[]) {
         draw_pieces(window, b);
         draw_moves(window, b, from, valid_moves);
         window.display();
+
+		// Generate and make engine move
+        if (b.to_move == engine_side) {
+        	int move = engine_move(b);
+        	b.make_move(move);
+        	move_list.push(move);
+        	print_move(move);
+        	int engine_eval = eval(b);
+        	std::cout << "eval: " << engine_eval << "\n\n";
+
+        	valid_moves = validate_moves(b, gen_moves(b));
+        }
     }
 
     return 0;

@@ -104,6 +104,9 @@ int Board::make_move(int move) {
 	// Switch turn
 	to_move = !to_move;
 
+	// Add to move list
+	move_list.push(move);
+
 	return valid;
 }
 
@@ -181,6 +184,9 @@ void Board::unmake_move(int move) {
 	if (piece[from] == KING) {
 		king_squares[to_move] = from;
 	}
+
+	// Remove from move list
+	move_list.pop();
 }
 
 void Board::update_castling_rights(int moving_piece) {

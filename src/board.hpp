@@ -53,6 +53,7 @@ public:
     // Other useful attributes
     std::stack<int> castling_rights_updates;
     int king_squares[2] = {};
+    std::stack<int> move_list;
 
     int make_move(int move);
     void unmake_move(int move);

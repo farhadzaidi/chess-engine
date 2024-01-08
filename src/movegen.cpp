@@ -31,6 +31,19 @@ std::vector<int> gen_moves(Board &b) {
 	return moves;
 }
 
+std::vector<int> validate_moves(Board &b, std::vector<int> moves) {
+	std::vector<int> valid_moves;
+	for (int move : moves) {
+		if (b.make_move(move)) {
+			valid_moves.push_back(move);
+		}
+
+		b.unmake_move(move);
+	}
+
+	return valid_moves;
+}
+
 void get_pawn_moves(Board &b, int sq, std::vector<int> &moves) {
 	// Set directions based on pawn's perspective
 	int is_white = b.color[sq] == WHITE ? 1 : 0;
