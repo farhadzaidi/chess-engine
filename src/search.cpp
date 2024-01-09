@@ -19,32 +19,33 @@ int random_move(Board &b) {
 	return valid_moves[0];
 }
 
-std::pair<int, int> minimax(Board &b, int depth) {
+Move_Eval minimax(Board &b, int depth) {
 	if (depth == 0) {
-		return {b.move_list.top(), eval(b)};
+		return Move_Eval(b.move_list.top(), eval(b));
 	}
 
-	std::vector<int> moves = gen_moves(b);
-	int side = b.to_move;
-	int dummy_eval = side == WHITE ? -9999 : 9999;
+	if (b.game_over()) {
+		return Move_Eval(0, eval(b));
+	}
 
-	std::pair<int, int> best_move_eval = {0, dummy_eval};
+	int side = b.to_move;
+	std::vector<int> moves = gen_moves(b);
+	int dummy_eval = side == WHITE ? -9999 : 9999;
+	Move_Eval best(0, dummy_eval);
 	for (int move : moves) {
 		if (b.make_move(move)) {
-			std::pair<int, int> move_eval = minimax(b, depth - 1);
-			if (side == WHITE 
-					&& move_eval.second >= best_move_eval.second) {
-				best_move_eval.first = move;
-				best_move_eval.second = move_eval.second;
-			} else if (side == BLACK
-					&& move_eval.second <= best_move_eval.second){
-				best_move_eval.first = move;
-				best_move_eval.second = move_eval.second;
+			const Move_Eval &cur = minimax(b, depth - 1);
+			if (side == WHITE && cur.eval > best.eval) {
+				best.move = move;
+				best.eval = cur.eval;
+			} else if (side == BLACK && cur.eval < best.eval) {
+				best.move = move;
+				best.eval = cur.eval;
 			}
 		}
 
 		b.unmake_move(move);
 	}
 
-	return best_move_eval;
+	return best;
 }

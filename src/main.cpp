@@ -127,23 +127,25 @@ void draw_moves(sf::RenderWindow &window, Board &b, int from,
 void print_move(int move) {
 	int from = get_from(move);
 	int to  = get_to(move);
-
-	std::cout << sq_to_chess(from) << sq_to_chess(to) << "\n";
+	std::cout << sq_to_chess(from) << sq_to_chess(to) << "\n\n";
 }
 
 int engine_move(Board &b) {
-	int depth = 4;
-	std::pair<int, int> best_move_eval = minimax(b, depth);
-	int from = get_from(best_move_eval.first);
-	int to = get_from(best_move_eval.first);
-	std::cout << "best move: " << from << " to " << to << "\n";
-	std::cout << "eval: " << best_move_eval.second << "\n";
-	return best_move_eval.first;
+	int depth = 5;
+	Move_Eval best = minimax(b, depth);
+	return best.move;
 }
 
 int main(int argc, char* argv[]) {
-	// Initialize board
+	// Starting position
 	std::string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+	// King Queen vs King endgame
+	// std::string FEN = "8/4k3/8/5Q2/5K2/8/8/8 w - - 0 1";
+
+	// Position 5 (for testing/debugging)
+	// std::string FEN = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8 ";
+
 	Board b;
 	load_from_FEN(b, FEN);
 
@@ -156,18 +158,9 @@ int main(int argc, char* argv[]) {
 		int nodes = perft(b, depth);
 		auto end = std::chrono::high_resolution_clock::now();
 		auto elapsed = std::chrono::duration<double>(end - start);
-		
-		int expected_nodes = perft_expected[depth];
+
 		std::cout << nodes << " nodes generated at depth " << depth
 			<< " in " << elapsed.count() << " seconds\n";
-
-		if (nodes == expected_nodes) {
-			std::cout << "Expected result\n";
-		} else {
-			int diff = abs(nodes - expected_nodes);
-			std::cout << "Unexpected result (off by " << diff << ")\n";
-			std::cout << "Expected result: " << expected_nodes << "\n";
-		}
 
 		return 0;
 	}
@@ -189,7 +182,7 @@ int main(int argc, char* argv[]) {
 	std::vector<int> valid_moves = validate_moves(b, gen_moves(b));
 	int from = -1;
 	int to = -1;
-	std::stack<int> move_list;
+	int game_end = 0;
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -212,7 +205,8 @@ int main(int argc, char* argv[]) {
 						int sq = row * 8 + col;
 						// Only set "from" if the selected piece is on the
 						// side to move
-						if (b.piece[sq] != EMPTY && b.color[sq] == player_side) {
+						if (b.piece[sq] != EMPTY && b.color[sq] == player_side
+							&& b.to_move == player_side) {
 							from = sq;
 						}
             		} else if (to == -1) {
@@ -224,12 +218,9 @@ int main(int argc, char* argv[]) {
 	            				int move_from = get_from(move);
 	            				int move_to = get_to(move);
 	            				if (from == move_from && to == move_to) {
-			            			move_list.push(move);
 			            			b.make_move(move);
+			            			std::cout << "Player: ";
 			            			print_move(move);
-
-			            			int engine_eval = eval(b);
-			            			std::cout << "eval: " << engine_eval << "\n\n";
 			            			// print_board(b);
 			            			// print_attr(b);
 			            			break;
@@ -254,15 +245,16 @@ int main(int argc, char* argv[]) {
             // Left arrow key (undo)
             if (event.type == sf::Event::KeyPressed
             	&& event.key.code == sf::Keyboard::Left) {
-            	// Undo twice to undo engine move and then player move
-            	for (int i = 0; i < 2; i++) {
-					if (!move_list.empty()) {
-	            		int move = move_list.top();
-	            		move_list.pop();
-	            		b.unmake_move(move);
-	            		std::cout << "undo ";
-	            		print_move(move);
-            		}
+            	if (!b.move_list.empty()) {
+            		b.unmake_move(b.move_list.top()); // unmake engine move
+            		int player_move = b.move_list.top();
+            		b.unmake_move(player_move);
+            		std::cout << "Player undo: ";
+            		print_move(player_move);
+            	}
+
+            	if (game_end) {
+            		game_end = 0;
             	}
 
 				// print_board(b);
@@ -280,15 +272,17 @@ int main(int argc, char* argv[]) {
         window.display();
 
 		// Generate and make engine move
-        if (b.to_move == engine_side) {
+        if (!game_end && b.to_move == engine_side) {
         	int move = engine_move(b);
-        	b.make_move(move);
-        	move_list.push(move);
-        	print_move(move);
-        	int engine_eval = eval(b);
-        	std::cout << "eval: " << engine_eval << "\n\n";
-
-        	valid_moves = validate_moves(b, gen_moves(b));
+        	if (move == 0) {
+        		std::cout << "GAME OVER\n";
+        		game_end = 1;
+        	} else {
+	        	b.make_move(move);
+	        	std::cout << "Engine: ";
+	        	print_move(move);
+	        	valid_moves = validate_moves(b, gen_moves(b));
+        	}
         }
     }
 

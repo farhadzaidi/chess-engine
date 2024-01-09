@@ -3,6 +3,9 @@
 #include "board.hpp"
 #include "constants.hpp"
 #include "move.hpp"
+#include "movegen.hpp"
+
+#include <iostream>
 
 Board::Board() {}
 
@@ -228,74 +231,81 @@ void Board::update_castling_rights(int moving_piece) {
 }
 
 int Board::is_attacked(int sq) {
-	if (is_attacked_helper(sq, BISHOP_MOVES, DIAGNAL_ATTACK_INFO))
-		return 1;
-
-	if (is_attacked_helper(sq, ROOK_MOVES, STRAIGHT_ATTACK_INFO))
-		return 1;
-
-	if (is_attacked_helper(sq, KNIGHT_MOVES, KNIGHT_ATTACK_INFO))
-		return 1;
-
-	if (is_attacked_helper(sq, KING_QUEEN_MOVES, KING_ATTACK_INFO))
-		return 1;
-
-	const int PAWN_ATTACK_INFO[3] = {PAWN, 0, 0};
-	// Pawn attacks change based on side
-	const int PAWN_ATTACKS[8] = {
-	    (to_move == WHITE) ? -11 : 11,
-	    (to_move == WHITE) ? -9 : 9,
-	    0, 0, 0, 0, 0, 0
+	int slide[5] = {0, 1, 0, 1, 0};
+	int attackers[5][2] = {
+	    {PAWN, 0},
+	    {BISHOP, QUEEN},
+	    {KNIGHT, 0},
+	    {ROOK, QUEEN},
+	    {KING, 0}
+	};
+	int attacks[5][8] = {
+	    {11, 9, 0, 0, 0, 0, 0, 0},
+	    {-11, -9, 9, 11, 0, 0, 0, 0},
+	    {-21, -19, -12, -8, 8, 12, 19, 21},
+	    {-10, -1, 1, 10, 0, 0, 0, 0},
+	    {-11, -10, -9, -1, 1, 9, 10, 11}
 	};
 
-	return is_attacked_helper(sq, PAWN_ATTACKS, PAWN_ATTACK_INFO);
-}
+	// Adjust pawn attacks based on perspective
+	if (to_move == WHITE) {
+		attacks[0][0] *= -1;
+		attacks[0][1] *= -1;
+	}
 
-// Creates attack rays from the square to see if they intersect with the 
-// respective enemy attacking piece. If so, this piece is attacked
-// e.g. if diagnal rays from the given square intersect with an enemy
-// bishop or queen, then this piece is attacked.
-// Also takes into account nonsliding attacks including pawns
-int Board::is_attacked_helper(int sq, const int directions[8], 
-	const int attack_info[3]) {
-	// Very similar code to piece_move_gen, but this time
-	// we are interested in determining if the square is attacked 
-	int slide = attack_info[2];
+	// Outer loop is used to iterate through the different attack types
+	for (int i = 0; i < 5; i++) {
+		// Inner loop goes through each individual direction the current
+		// attack type
+		for (int j = 0; j < 8; j++) {
+			// Not all piece types have 8 attacks so break early
+			if (attacks[i][j] == 0) {
+				break;
+			}
 
-	for (int i = 0; i < 8; i++) {
-		if (directions[i] == 0) {
-			break;
-		}
-
-		int nxt_sq = get_mailbox_num(sq, directions[i]);
-		while (in_bounds(nxt_sq)) {
-			if (!is_empty(nxt_sq)) {
-				// Check if the occupying piece is an enemy piece
-				if (color[nxt_sq] != to_move) {
-					// If so, check if the occupying piece is one of the
-					// respective attackers (of this direction)
-					for (int j = 0; j < 2; j++) {
- 						if (piece[nxt_sq] == attack_info[j]) {
-							return 1;
+			int nxt_sq = get_mailbox_num(sq, attacks[i][j]);
+			while (in_bounds(nxt_sq)) {
+				// If the next square is not empty, then we have to see if it
+				// is an attacker of the current attack type (e.g. if we
+				// are looping through diagnal attacks then we have to see
+				// if the attacker is a bishop or a queen)
+				if (!is_empty(nxt_sq)) {
+					if (color[nxt_sq] != to_move) {
+						for (int k = 0; k < 2; k++) {
+							if (piece[nxt_sq] == attackers[i][k]) {
+								return 1;
+							}
 						}
 					}
+
+					break;
 				}
 
-				// If the square is not empty, and not an attacker, break
-				// and move onto the next direction
-				break;
-			}
+				// No need to keep looping for nonsliding pieces
+				if (!slide[i]) {
+					break;
+				}
 
-			// No need to keep looping for nonsliding pieces
-			if (!slide) {
-				break;
+				nxt_sq = get_mailbox_num(nxt_sq, attacks[i][j]);
 			}
-
-			nxt_sq = get_mailbox_num(nxt_sq, directions[i]);
 		}
 	}
 
 	return 0;
+}
+
+int Board::game_over() {
+	std::vector<int> moves = gen_moves(*this);
+	for (int move : moves) {
+		if (make_move(move)) {
+			unmake_move(move);
+			return 0;
+		}
+
+		unmake_move(move);
+	}
+
+	return 1;
 }
 
 // HELPER FUNCTIONS

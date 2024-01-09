@@ -45,9 +45,7 @@ public:
     int castling_rights = 0;
     int to_move;
     std::stack<int> enpas_sq;
-    // Number of halfmoves SINCE last capture or pawn advance 
-    // (used for fifty-move rule) 
-    int num_plys;
+    int num_plys; // Num plys SINCE last capture or pawn advance
     int num_moves;
 
     // Other useful attributes
@@ -59,14 +57,13 @@ public:
     void unmake_move(int move);
     void update_castling_rights(int moving_piece);
     int is_attacked(int sq);
-    // int is_attacked_helper(int sq, const int directions[8], int slide, 
-    //     const int attackers[2]);
-    int is_attacked_helper(int sq, const int directions[8], const int attack_info[3]);
 
     int in_bounds(int sq);
     int is_empty(int sq);
     int diff_colors(int sq1, int sq2);
     int get_mailbox_num(int sq, int offset);
+
+    int game_over();
     
 };
 

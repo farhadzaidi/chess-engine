@@ -3,6 +3,8 @@
 #include "board.hpp"
 #include "move.hpp"
 
+#include <iostream>
+
 std::vector<int> gen_moves(Board &b) {
 	std::vector<int> moves;
 	for (int sq : b.piece_squares[b.to_move]) {
@@ -100,8 +102,13 @@ void get_pawn_moves(Board &b, int sq, std::vector<int> &moves) {
 	}
 }
 
-void get_piece_moves(Board &b, int sq, const int directions[8], int slide,
-	std::vector<int> &moves) {
+void get_piece_moves(
+	Board &b, 
+	int sq, 
+	const int directions[8], 
+	int slide,
+	std::vector<int> &moves
+) {
 	for (int i = 0; i < 8; i++) {
 		// Not all pieces have 8 move directions
 		// Break the loop when the current piece has no more directions 
@@ -167,4 +174,3 @@ void get_piece_moves(Board &b, int sq, const int directions[8], int slide,
 		}
 	}
 }
-
