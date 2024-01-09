@@ -131,8 +131,8 @@ void print_move(int move) {
 }
 
 int engine_move(Board &b) {
-	int depth = 5;
-	Move_Eval best = minimax(b, depth);
+	int depth = 7;
+	Move_Eval best = minimax(b, depth, -9999, 9999);
 	return best.move;
 }
 

@@ -11,6 +11,6 @@ struct Move_Eval {
 };
 
 int random_move(Board &b);
-Move_Eval minimax(Board &b, int depth);
+Move_Eval minimax(Board &b, int depth, int alpha, int beta);
 
 #endif
