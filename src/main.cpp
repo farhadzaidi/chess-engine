@@ -194,6 +194,7 @@ int main(int argc, char* argv[]) {
             // Left click
             if (event.type == sf::Event::MouseButtonPressed
             	&& event.mouseButton.button == sf::Mouse::Left) {
+            	handle_left_click(window, b, from, to, player_side);
             	// Get position of click and compute row/col
             	sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
         		int col = mouse_pos.x / 150 - 1;

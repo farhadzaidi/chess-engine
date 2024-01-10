@@ -39,9 +39,11 @@ Move_Eval minimax(Board &b, int depth, int alpha, int beta) {
 				if (cur.eval > best.eval) {
 					best.move = move;
 					best.eval = cur.eval;
+					alpha = cur.eval;
 				}
 
-				alpha = std::max(alpha, cur.eval);
+				// If parent (black) has a better (lower value) move, then
+				// abandon the search, because black will never go down this path
 				if (beta <= alpha) {
 					b.unmake_move(move);
 					break;
@@ -50,10 +52,12 @@ Move_Eval minimax(Board &b, int depth, int alpha, int beta) {
 				if (cur.eval < best.eval) {
 					best.move = move;
 					best.eval = cur.eval;
+					beta = cur.eval;
 				}
 
-				beta = std::min(beta, cur.eval);
-				if (beta <= alpha) {
+				// Same thing as above, but this time the parent (white) has a 
+				// better (higher value) move so it won't go down this path
+				if (alpha >= beta) {
 					b.unmake_move(move);
 					break;
 				}
@@ -65,11 +69,3 @@ Move_Eval minimax(Board &b, int depth, int alpha, int beta) {
 
 	return best;
 }
-
-			// if (side == WHITE && cur.eval > best.eval) {
-			// 	best.move = move;
-			// 	best.eval = cur.eval;
-			// } else if (side == BLACK && cur.eval < best.eval) {
-			// 	best.move = move;
-			// 	best.eval = cur.eval;
-			// }
