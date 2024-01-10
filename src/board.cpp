@@ -1,11 +1,9 @@
 #include <cmath>
 
-#include "board.hpp"
 #include "constants.hpp"
+#include "board.hpp"
 #include "move.hpp"
 #include "movegen.hpp"
-
-#include <iostream>
 
 Board::Board() {}
 

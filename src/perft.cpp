@@ -1,12 +1,13 @@
 #include <vector>
+#include <chrono>
 
 #include "perft.hpp"
 #include "movegen.hpp"
 
 class Board;
 
-unsigned long long perft(Board &b, int depth) {
-	unsigned long long num_moves = 0;
+int perft(Board &b, int depth) {
+	int num_moves = 0;
 
 	if (depth == 0) {
 		return 1ULL;
@@ -22,5 +23,17 @@ unsigned long long perft(Board &b, int depth) {
 	}
 
 	return num_moves;
+}
+
+void run_perft(Board &b, int depth) {
+	std::cout << "\nMove Generation Performance Test\n";
+
+	auto start = std::chrono::high_resolution_clock::now();
+	int nodes = perft(b, depth);
+	auto end = std::chrono::high_resolution_clock::now();
+	auto elapsed = std::chrono::duration<double>(end - start);
+
+	std::cout << nodes << " nodes generated at depth " << depth
+		<< " in " << elapsed.count() << " seconds\n";
 }
 

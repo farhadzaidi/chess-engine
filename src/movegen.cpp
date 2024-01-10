@@ -1,9 +1,7 @@
-#include "movegen.hpp"
 #include "constants.hpp"
+#include "movegen.hpp"
 #include "board.hpp"
 #include "move.hpp"
-
-#include <iostream>
 
 std::vector<int> gen_moves(Board &b) {
 	std::vector<int> moves;

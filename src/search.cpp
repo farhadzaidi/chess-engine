@@ -1,10 +1,9 @@
 #include <random>
 #include <algorithm>
 #include <vector>
-#include <iostream>
 
-#include "search.hpp"
 #include "constants.hpp"
+#include "search.hpp"
 #include "board.hpp"
 #include "movegen.hpp"
 #include "evaluation.hpp"
@@ -30,7 +29,7 @@ Move_Eval minimax(Board &b, int depth, int alpha, int beta) {
 
 	int side = b.to_move;
 	std::vector<int> moves = gen_moves(b);
-	Move_Eval best(0, side == WHITE ? -9999 : 9999);
+	Move_Eval best(0, side == WHITE ? -INF : INF);
 	for (int move : moves) {
 		if (b.make_move(move)) {
 			const Move_Eval &cur = minimax(b, depth - 1, alpha, beta);

@@ -1,9 +1,7 @@
+#include "constants.hpp"
 #include "evaluation.hpp"
 #include "board.hpp"
-#include "constants.hpp"
 
-// White wants to MAXIMIZE the evaluation score
-// Black wants to MINIMIZE the evaluation score
 int eval(Board &b) {
 	int white_score = 0;
 	for (int sq : b.piece_squares[WHITE]) {

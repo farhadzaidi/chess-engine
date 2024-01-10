@@ -1,6 +1,9 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#define INF 99999
+#define ENGINE_DEPTH 6
+
 enum Color {
     BLACK,
     WHITE

@@ -3,7 +3,7 @@
 
 class Board;
 
-const int PIECE_VALUE[7] = {0, 1, 3, 3, 5, 9, 100};
+const int PIECE_VALUE[7] = {0, 100, 300, 300, 500, 900, INF};
 
 int eval(Board &b);
 
