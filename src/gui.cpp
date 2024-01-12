@@ -44,8 +44,7 @@ void run_gui(Board &b) {
         if (!b.game_over()) {
             // Generate and make engine move
             if (b.to_move != player_side) {
-                Move_Eval best = minimax(b, ENGINE_DEPTH, -INF, INF);
-                int move = best.move;
+                int move = search(b, ENGINE_DEPTH);
                 b.make_move(move);
                 valid_moves = validate_moves(b, gen_moves(b));
             }

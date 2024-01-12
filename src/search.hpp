@@ -3,13 +3,8 @@
 
 class Board;
 
-struct Move_Eval {
-    int move;
-    int eval;
-
-    Move_Eval(int move, int eval) : move(move), eval(eval) {};
-};
-
-Move_Eval minimax(Board &b, int depth, int alpha, int beta);
+int search(Board &b, int depth);
+int mini(Board &b, int depth, int alpha, int beta);
+int maxi(Board &b, int depth, int alpha, int beta);
 
 #endif
