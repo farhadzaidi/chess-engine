@@ -1,5 +1,3 @@
-#include <random>
-#include <algorithm>
 #include <vector>
 
 #include "constants.hpp"
@@ -8,15 +6,17 @@
 #include "movegen.hpp"
 #include "evaluation.hpp"
 
-int random_move(Board &b) {
-	std::vector<int> valid_moves = validate_moves(b, gen_moves(b));
+// Search uses the minimax algorithm with the following pruning algorithms:
+	// Alpha-beta pruning
 
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::shuffle(valid_moves.begin(), valid_moves.end(), gen);
-
-	return valid_moves[0];
-}
+// TODO:
+	// Move ordering
+	// Transposition tables
+	// Iterative deepening
+	// Quiescence search
+	// Late move reductions
+	// Aspiration windows
+	// Time search (instead of fixed depth)
 
 Move_Eval minimax(Board &b, int depth, int alpha, int beta) {
 	if (depth == 0) {

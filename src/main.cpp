@@ -7,7 +7,7 @@
 
 int main(int argc, char* argv[]) {
 	// Initialize board
-	std::string FEN = "8/4k3/8/5Q2/5K2/8/8/8 w - - 0 1";
+	std::string FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	Board b;
 	load_from_FEN(b, FEN);
 

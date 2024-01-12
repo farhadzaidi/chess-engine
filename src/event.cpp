@@ -1,5 +1,6 @@
 #include <string>
 
+#include "SFML/Graphics.hpp"
 #include "constants.hpp"
 #include "event.hpp"
 #include "move.hpp"

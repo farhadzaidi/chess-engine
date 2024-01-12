@@ -16,8 +16,7 @@ void run_gui(Board &b) {
     sf::Font font;
     font.loadFromFile("assets/fonts/DejaVuSans.ttf");
 
-	int engine_side = WHITE;
-	int player_side = BLACK;
+	int player_side = WHITE;
 	int from = -1;
 	int to = -1;
     std::vector<int> valid_moves = validate_moves(b, gen_moves(b));
@@ -28,7 +27,9 @@ void run_gui(Board &b) {
         sf::Event event;
         while (window.pollEvent(event)) {
         	handle_close(window, event);
+            // Move piece
         	handle_leftclick(window, event, b, from, to, player_side, valid_moves);
+            // Undo move
         	handle_leftarrow(event, b, valid_moves);
         }
 
@@ -42,7 +43,7 @@ void run_gui(Board &b) {
 
         if (!b.game_over()) {
             // Generate and make engine move
-            if (b.to_move == engine_side) {
+            if (b.to_move != player_side) {
                 Move_Eval best = minimax(b, ENGINE_DEPTH, -INF, INF);
                 int move = best.move;
                 b.make_move(move);

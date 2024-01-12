@@ -2,6 +2,11 @@
 #include "evaluation.hpp"
 #include "board.hpp"
 
+// TODO:
+	// Piece maps
+	// King safety
+	// Pawn structure
+
 int eval(Board &b) {
 	int white_score = 0;
 	for (int sq : b.piece_squares[WHITE]) {
