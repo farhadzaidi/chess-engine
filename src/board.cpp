@@ -37,6 +37,9 @@ int Board::make_move(int move) {
 		}
 
 		piece_squares[!to_move].erase(cap_sq);
+
+		// Update material value
+		material[!to_move] -= PIECE_VALUE[captured_pieces[to_move].top()];
 	}
 
 	// Adjust moving piece square in piece_squares
@@ -81,15 +84,19 @@ int Board::make_move(int move) {
 	switch (flag) {
 		case P_BISHOP:
 			piece[to] = BISHOP;
+			material[to_move] += PIECE_VALUE[BISHOP] - PIECE_VALUE[PAWN];
 			break;
 		case P_KNIGHT:
 			piece[to] = KNIGHT;
+			material[to_move] += PIECE_VALUE[KNIGHT] - PIECE_VALUE[PAWN];
 			break;
 		case P_ROOK:
 			piece[to] = ROOK;
+			material[to_move] += PIECE_VALUE[ROOK] - PIECE_VALUE[PAWN];
 			break;
 		case P_QUEEN:
 			piece[to] = QUEEN;
+			material[to_move] += PIECE_VALUE[QUEEN] - PIECE_VALUE[PAWN];
 			break;
 	}
 
@@ -139,6 +146,7 @@ void Board::unmake_move(int move) {
 		captured_pieces[to_move].pop();
 		piece[cap_sq] = captured_piece;
 		color[cap_sq] = !to_move;
+		material[!to_move] += PIECE_VALUE[captured_piece];
 	}
 
 	if (flag == CASTLE) {
@@ -165,9 +173,24 @@ void Board::unmake_move(int move) {
 	}
 
 	// If the flag is a promotion of any kind, change the piece at 
-	// "from" to a pawn
-	if (flag == P_BISHOP || flag == P_KNIGHT || flag == P_ROOK || flag == P_QUEEN) {
-		piece[from] = PAWN;
+	// "from" to a pawn and revert material changes
+	switch (flag) {
+		case P_BISHOP:
+			piece[from] = PAWN;
+			material[to_move] -= PIECE_VALUE[BISHOP] - PIECE_VALUE[PAWN];
+			break;
+		case P_KNIGHT:
+			piece[from] = PAWN;
+			material[to_move] -= PIECE_VALUE[KNIGHT] - PIECE_VALUE[PAWN];
+			break;
+		case P_ROOK:
+			piece[from] = PAWN;
+			material[to_move] -= PIECE_VALUE[ROOK] - PIECE_VALUE[PAWN];
+			break;
+		case P_QUEEN:
+			piece[from] = PAWN;
+			material[to_move] -= PIECE_VALUE[QUEEN] - PIECE_VALUE[PAWN];
+			break;
 	}
 
 	// Only empty "to" for quiet moves or en passant captures

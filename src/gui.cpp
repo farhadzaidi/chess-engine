@@ -10,6 +10,8 @@
 #include "event.hpp"
 #include "draw.hpp"
 
+#include <iostream>
+
 void run_gui(Board &b) {
     // Initialize window
     sf::RenderWindow window(sf::VideoMode(1500, 1500), "Chess");

@@ -52,6 +52,7 @@ public:
     std::stack<int> castling_rights_updates;
     int king_squares[2] = {};
     std::stack<int> move_list;
+    int material[2] = {};
 
     int make_move(int move);
     void unmake_move(int move);

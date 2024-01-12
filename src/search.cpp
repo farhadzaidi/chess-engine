@@ -22,84 +22,42 @@ int search(Board &b, int depth) {
 	int alpha = -INF;
 	int beta = INF;
 	std::vector<int> moves = gen_moves(b);
+	int max_score = -INF;
 	int best_move = 0;
 
-	if (b.to_move == WHITE) {
-		int best_score = -INF;
-		for (int move : moves) {
-			if (b.make_move(move)) {
-				int cur_score = mini(b, depth - 1, alpha, beta);
-				if (cur_score > best_score) {
-					best_score = cur_score;
-					alpha = cur_score;
-					best_move = move;
-				}
-			}
-
-			b.unmake_move(move);
-		}
-	} else {
-		int best_score = INF;
-		for (int move : moves) {
-			if (b.make_move(move)) {
-				int cur_score = maxi(b, depth - 1, alpha, beta);
-				if (cur_score < best_score) {
-					best_score = cur_score;
-					beta = cur_score;
-					best_move = move;
-				}
-			}
-
-			b.unmake_move(move);
-		}
-	}
-
-	return best_move;
-}
-
-int mini(Board &b, int depth, int alpha, int beta) {
-	if (depth == 0 || b.game_over()) {
-		return eval(b);
-	}
-
-	int min_score = INF;
-	std::vector<int> moves = gen_moves(b);
-	for (int move: moves) {
+	for (int move : moves) {
 		if (b.make_move(move)) {
-			int cur_score = maxi(b, depth - 1, alpha, beta);
-			if (cur_score < min_score) {
-				min_score = cur_score;
-				beta = cur_score;
-			}
-
-			if (alpha >= beta) {
-				b.unmake_move(move);
-				break;
+			int score = -negamax(b, depth - 1, -beta, -alpha);
+			if (score > max_score) {
+				max_score = score;
+				alpha = score;
+				best_move = move;
 			}
 		}
 
 		b.unmake_move(move);
 	}
 
-	return min_score;
+	return best_move;
 }
 
-int maxi(Board &b, int depth, int alpha, int beta) {
+
+int negamax(Board &b, int depth, int alpha, int beta) {
 	if (depth == 0 || b.game_over()) {
 		return eval(b);
 	}
 
-	int max_score = -INF;
 	std::vector<int> moves = gen_moves(b);
-	for (int move: moves) {
+	int max_score = -INF;
+	for (int move : moves) {
 		if (b.make_move(move)) {
-			int cur_score = mini(b, depth - 1, alpha, beta);
-			if (cur_score > max_score) {
-				max_score = cur_score;
-				alpha = cur_score;
+			int score = -negamax(b, depth - 1, -beta, -alpha);
+			if (score > max_score) {
+				max_score = score;
+				alpha = score;
 			}
 
-			if (beta <= alpha) {
+			if (alpha >= beta) {
 				b.unmake_move(move);
 				break;
 			}

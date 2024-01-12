@@ -60,6 +60,7 @@ void load_from_FEN(Board &b, std::string FEN) {
             b.color[sq] = std::isupper(FEN[i]) ? WHITE : BLACK;
             b.piece[sq] = chr_to_p.at(std::tolower(FEN[i]));
             b.piece_squares[b.color[sq]].insert(sq);
+            b.material[b.color[sq]] += PIECE_VALUE[b.piece[sq]];
             if (b.piece[sq] == KING) {
                 b.king_squares[b.color[sq]] = sq;
             }

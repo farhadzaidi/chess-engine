@@ -4,7 +4,6 @@
 class Board;
 
 int search(Board &b, int depth);
-int mini(Board &b, int depth, int alpha, int beta);
-int maxi(Board &b, int depth, int alpha, int beta);
+int negamax(Board &b, int depth, int alpha, int beta);
 
 #endif

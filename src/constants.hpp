@@ -1,7 +1,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#define INF 99999
+#define INF 10000
 #define ENGINE_DEPTH 6
 
 enum Color {
@@ -62,5 +62,7 @@ const int WLR_START = a1;
 const int WRR_START = h1;
 const int BLR_START = a8;
 const int BRR_START = h8;
+
+const int PIECE_VALUE[7] = {0, 100, 300, 300, 500, 900, INF};
 
 #endif
