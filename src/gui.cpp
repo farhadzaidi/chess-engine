@@ -51,5 +51,6 @@ void run_gui(Board &b) {
                 valid_moves = validate_moves(b, gen_moves(b));
             }
         }
+
     }
 }

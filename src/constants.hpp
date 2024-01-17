@@ -1,6 +1,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#define U64 unsigned long long
 #define INF 10000
 #define ENGINE_DEPTH 6
 

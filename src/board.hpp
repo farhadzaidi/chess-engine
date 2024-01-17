@@ -2,7 +2,11 @@
 #define BOARD_H
 
 #include <unordered_set>
+#include <unordered_map>
 #include <stack>
+#include <random>
+
+#include "constants.hpp"
 
 class Board {
 public:
@@ -35,6 +39,9 @@ public:
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1  
     };
 
+    // Random number generator
+    std::mt19937_64 rng;
+
     // Board representation
     int color[64] = {};
     int piece[64] = {};
@@ -50,21 +57,35 @@ public:
 
     // Other useful attributes
     std::stack<int> castling_rights_updates;
-    int king_squares[2] = {};
+    int king_squares[2];
     std::stack<int> move_list;
     int material[2] = {};
+
+    // Stores zobrist keys (randomly generated at board initialization) for
+    // each combination of piece color, type, and position
+    U64 zobrist_piece_table[2][7][64];
+    // Zobrist keys for other board attributes
+    U64 zobrist_enpas_table[8];
+    U64 zobrist_castle_table[16];
+    U64 zobrist_to_move_key;
+
+    U64 zobrist_hash;
+    std::unordered_map<U64, int> transpo_table; 
+
+    void initialize_zobrist_tables();
 
     int make_move(int move);
     void unmake_move(int move);
     void update_castling_rights(int moving_piece);
     int is_attacked(int sq);
+    int game_over();
+    void set_zobrist_hash();
 
     int in_bounds(int sq);
     int is_empty(int sq);
     int diff_colors(int sq1, int sq2);
     int get_mailbox_num(int sq, int offset);
-
-    int game_over();
+    U64 gen_rand_U64();
     
 };
 

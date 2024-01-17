@@ -1,5 +1,3 @@
-#include <vector>
-
 #include "constants.hpp"
 #include "search.hpp"
 #include "board.hpp"
@@ -68,3 +66,11 @@ int negamax(Board &b, int depth, int alpha, int beta) {
 
 	return max_score;
 }
+
+// Transposition table:
+	// cache every position and its evaluation in the table
+	// after making a move, check if the position is in the table
+		// if so, return the evaluation of the position
+
+// void order_moves(std::vector<int> &moves) {}
+

@@ -1,11 +1,54 @@
 #include <cmath>
+#include <limits>
 
-#include "constants.hpp"
 #include "board.hpp"
 #include "move.hpp"
 #include "movegen.hpp"
 
-Board::Board() {}
+Board::Board() {
+	rng = std::mt19937_64(0);
+	initialize_zobrist_tables();
+}
+
+void Board::initialize_zobrist_tables() {
+	for (int i = 0; i < 2; i++) {
+		for (int j = 0; j < 7; j++) {
+			for (int k = 0; k < 64; k++) {
+				zobrist_piece_table[i][j][k] = gen_rand_U64();
+			}
+		}
+	}
+
+	for (int i = 0; i < 8; i++) {
+		zobrist_enpas_table[i] = gen_rand_U64();
+	}
+
+	for (int i = 0; i < 16; i++) {
+		zobrist_castle_table[i] = gen_rand_U64();
+	}
+
+	zobrist_to_move_key = gen_rand_U64();
+}
+
+// Update zobrist hash when making a move:
+	// xor out moving piece from origin (from)
+	// xor out captured piece from its square (cap_sq)
+	// xor in moving piece to its destination (to)
+	// xor out old castling_rights 
+	// xor in new castling rights
+	// xor out old enpas target square if there is one
+	// xor out new enpas target square if there is one
+	// xor in/out to_move key
+
+// Undo zobrist hash when unmaking a move:
+	// xor out moving piece from destination
+	// xor in moving piece to origin
+	// xor in captured piece
+	// xor out updated castling rights
+	// xor in old castling rights
+	// xor out enpas target square if there is one
+	// xor in previous enpas target square if there is one
+	// xor in/out to_move key
 
 int Board::make_move(int move) {
 	int from = get_from(move);
@@ -18,25 +61,17 @@ int Board::make_move(int move) {
 	int south = to_move == WHITE ? 8 : -8;
 	if (piece[from] == PAWN && abs(from - to) == 16) {
 		enpas_sq.push(to + south);
+		// zobrist_hash ^= zobrist_enpas_table[enpas_sq.top() % 8];
 	} else {
 		enpas_sq.push(-1);
 	}
 
 	if (mtype == CAPTURE) {
-		// Handle capture logic slightly differently for en passant
-			// Captured piece is south of "to"
-			// Captured piece square needs to be emptied 
-		int cap_sq = to;
-		if (flag == EN_PASSANT) {
-			cap_sq += south;
-			captured_pieces[to_move].push(piece[cap_sq]);
-			piece[cap_sq] = EMPTY;
-			color[cap_sq] = EMPTY;
-		} else {
-			captured_pieces[to_move].push(piece[cap_sq]);
-		}
-
+		int cap_sq = flag == EN_PASSANT ? to + south : to;
+		captured_pieces[to_move].push(piece[cap_sq]);
 		piece_squares[!to_move].erase(cap_sq);
+		piece[cap_sq] = EMPTY;
+		color[cap_sq] = EMPTY;
 
 		// Update material value
 		material[!to_move] -= PIECE_VALUE[captured_pieces[to_move].top()];
@@ -329,6 +364,23 @@ int Board::game_over() {
 	return 1;
 }
 
+void Board::set_zobrist_hash() {
+	zobrist_hash = 0;
+	for (int i = 0; i < 64; i++) {
+		int side = color[i];
+		int ptype = piece[i];
+		int pos = i;
+		zobrist_hash ^= zobrist_piece_table[side][ptype][pos];
+	}
+
+	if (enpas_sq.top() != -1) {
+		zobrist_hash ^= zobrist_enpas_table[enpas_sq.top() % 8];
+	}
+
+	zobrist_hash ^= zobrist_castle_table[castling_rights];
+	zobrist_hash ^= zobrist_to_move_table[to_move];
+}
+
 // HELPER FUNCTIONS
 
 int Board::in_bounds(int sq) {
@@ -345,4 +397,11 @@ int Board::diff_colors(int sq1, int sq2) {
 
 int Board::get_mailbox_num(int sq, int offset) {
 	return mailbox[mailbox64[sq] + offset];
+}
+
+U64 Board::gen_rand_U64() {
+	U64 MAX_UINT = std::numeric_limits<U64>::max();
+	std::uniform_int_distribution<U64> dist(0, MAX_UINT);
+
+	return dist(rng);
 }
