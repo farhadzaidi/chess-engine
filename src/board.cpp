@@ -378,7 +378,7 @@ void Board::set_zobrist_hash() {
 	}
 
 	zobrist_hash ^= zobrist_castle_table[castling_rights];
-	zobrist_hash ^= zobrist_to_move_table[to_move];
+	zobrist_hash ^= zobrist_to_move_key;
 }
 
 // HELPER FUNCTIONS
