@@ -10,6 +10,9 @@
 #include "evaluation.hpp"
 #include "search.hpp"
 
+const int WINDOW_SIZE = 700;
+const float u = WINDOW_SIZE / 10;
+
 const sf::Color LIGHT(245, 245, 245);
 const sf::Color DARK(46, 46, 56);
 const sf::Color INFO(127, 212, 245);
@@ -17,8 +20,8 @@ const sf::Color INFO(127, 212, 245);
 void draw_board(sf::RenderWindow &window, sf::Font &font) {
     // Draw border
     sf::RectangleShape bd;
-    bd.setSize(sf::Vector2f(1200, 1200));
-    bd.setPosition(150, 150);
+    bd.setSize(sf::Vector2f(8*u, 8*u));
+    bd.setPosition(u, u);
     bd.setFillColor(sf::Color::Transparent);
     bd.setOutlineColor(DARK);
     bd.setOutlineThickness(5);
@@ -28,20 +31,20 @@ void draw_board(sf::RenderWindow &window, sf::Font &font) {
     for (int r = 0; r < 8; r++) {
         for (int c = 0; c < 8; c++) {
             sf::RectangleShape sq;
-            sq.setSize(sf::Vector2f(150, 150));
-            sq.setPosition(150 * (r + 1), 150 * (c + 1));
+            sq.setSize(sf::Vector2f(u, u));
+            sq.setPosition(u * (r + 1), u * (c + 1));
             sq.setFillColor((r + c) & 1 ? DARK : LIGHT);
             window.draw(sq);
         }
     }
 
-    // Draw ranks
+    // Draw ranks and files
     for (int i = 8; i >= 1; i--) {
         sf::Text rank;
         rank.setString(std::to_string(i));
         rank.setFont(font);
-        rank.setCharacterSize(80);
-        rank.setPosition(40, 150 * (8 - i) + 170);
+        rank.setCharacterSize(0.5*u);
+        rank.setPosition(0.35*u, u * (8 - i) + 1.2*u);
         rank.setFillColor(DARK);
         window.draw(rank);
 
@@ -49,8 +52,8 @@ void draw_board(sf::RenderWindow &window, sf::Font &font) {
         char file_chr = 'h' - i + 1;
         file.setString(file_chr);
         file.setFont(font);
-        file.setCharacterSize(80);
-        file.setPosition(150 * (8 - i) + 200, 1370);
+        file.setCharacterSize(0.5*u);
+        file.setPosition(u * (8 - i) + 1.3*u, 9.1*u);
         file.setFillColor(DARK);
         window.draw(file);
     }
@@ -88,7 +91,8 @@ void draw_pieces(sf::RenderWindow &window, Board &b) {
 
         int row = i / 8;
         int col = i % 8;
-        spr.setPosition(150 * (col + 1) + 10, 150 * (row + 1) + 10);
+        spr.setScale(0.007*u, 0.007*u);
+        spr.setPosition(u * (col + 1) + 0.05*u, u * (row + 1) + 0.05*u);
         window.draw(spr);
     }
 }
@@ -114,8 +118,8 @@ void draw_moves(
         int col = to % 8;
 
         sf::CircleShape c;
-        c.setRadius(20);
-        c.setPosition(150 * (col + 1) + 50, 150 * (row + 1) + 50);
+        c.setRadius(0.15*u);
+        c.setPosition(u * (col + 1) + 0.35*u, u * (row + 1) + 0.35*u);
         c.setFillColor(INFO);
         window.draw(c);
     }
@@ -124,7 +128,12 @@ void draw_moves(
 
 void run_gui(Board &b) {
     // Initialize window
-    sf::RenderWindow window(sf::VideoMode(1500, 1500), "Chess");
+    sf::RenderWindow window(
+        sf::VideoMode(WINDOW_SIZE, WINDOW_SIZE), 
+        "Chess", 
+        sf::Style::Default, 
+        sf::ContextSettings(0, 0, 8)
+    );
     sf::Font font;
     font.loadFromFile("assets/fonts/DejaVuSans.ttf");
 
@@ -154,8 +163,8 @@ void run_gui(Board &b) {
                     && event.mouseButton.button == sf::Mouse::Left) {
                     // Get position of click and compute row/col
                     sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
-                    int col = mouse_pos.x / 150 - 1;
-                    int row = mouse_pos.y / 150 - 1;
+                    int col = mouse_pos.x / u - 1;
+                    int row = mouse_pos.y / u - 1;
 
                     // Ensure the click area is in bounds before processing further
                     if (0 <= col && col <= 7 && 0 <= row && row <= 7) {
