@@ -37,17 +37,7 @@ void Board::initialize_zobrist_tables() {
 	// xor out old castling_rights 
 	// xor in new castling rights
 	// xor out old enpas target square if there is one
-	// xor out new enpas target square if there is one
-	// xor in/out to_move key
-
-// Undo zobrist hash when unmaking a move:
-	// xor out moving piece from destination
-	// xor in moving piece to origin
-	// xor in captured piece
-	// xor out updated castling rights
-	// xor in old castling rights
-	// xor out enpas target square if there is one
-	// xor in previous enpas target square if there is one
+	// xor in new enpas target square if there is one
 	// xor in/out to_move key
 
 int Board::make_move(int move) {
@@ -57,11 +47,16 @@ int Board::make_move(int move) {
 	int flag = get_flag(move);
 	int valid = 1;
 
+	// xor out old enpas target square if there is one
+	if (enpas_sq.top() != -1) {
+		zobrist_hash ^= zobrist_enpas_table[enpas_sq.top() % 8];
+	}
+
 	// Set en passant target square if pawn moves two squares
 	int south = to_move == WHITE ? 8 : -8;
 	if (piece[from] == PAWN && abs(from - to) == 16) {
 		enpas_sq.push(to + south);
-		// zobrist_hash ^= zobrist_enpas_table[enpas_sq.top() % 8];
+		zobrist_hash ^= zobrist_enpas_table[enpas_sq.top() % 8];
 	} else {
 		enpas_sq.push(-1);
 	}
@@ -75,7 +70,13 @@ int Board::make_move(int move) {
 
 		// Update material value
 		material[!to_move] -= PIECE_VALUE[captured_pieces[to_move].top()];
+
+		// xor out captured piece
+		zobrist_hash ^= zobrist_piece_table[!to_move][piece[cap_sq]][cap_sq];
 	}
+
+	zobrist_hash ^= zobrist_piece_table[to_move][piece[from]][from];
+	zobrist_hash ^= zobrist_piece_table[to_move][piece[from]][to];
 
 	// Adjust moving piece square in piece_squares
 	piece_squares[to_move].erase(from);
@@ -146,12 +147,23 @@ int Board::make_move(int move) {
 
 	// Switch turn
 	to_move = !to_move;
+	zobrist_hash ^= zobrist_to_move_key;
 
 	// Add to move list
 	move_list.push(move);
 
 	return valid;
 }
+
+// Undo zobrist hash when unmaking a move:
+	// xor out moving piece from destination
+	// xor in moving piece to origin
+	// xor in captured piece
+	// xor out updated castling rights
+	// xor in old castling rights
+	// xor out enpas target square if there is one
+	// xor in previous enpas target square if there is one
+	// xor in/out to_move key
 
 void Board::unmake_move(int move) {
 	int from = get_from(move);
@@ -161,6 +173,7 @@ void Board::unmake_move(int move) {
 
 	// Revert turn
 	to_move = !to_move;
+	zobrist_hash ^= zobrist_to_move_key;
 
 	enpas_sq.pop();
 
@@ -249,6 +262,9 @@ void Board::unmake_move(int move) {
 }
 
 void Board::update_castling_rights(int moving_piece) {
+	// xor out old castling rights
+	zobrist_hash ^= zobrist_castle_table[castling_rights];
+
 	int update = 0;
 	if (castling_rights) {
 		int is_white = to_move == WHITE;
@@ -284,6 +300,8 @@ void Board::update_castling_rights(int moving_piece) {
 		}
 	}
 	castling_rights_updates.push(update);
+	// xor in new castling rights
+	zobrist_hash ^= zobrist_castle_table[castling_rights];
 }
 
 int Board::is_attacked(int sq) {

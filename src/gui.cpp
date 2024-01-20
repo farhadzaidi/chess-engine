@@ -10,6 +10,8 @@
 #include "evaluation.hpp"
 #include "search.hpp"
 
+#include <iostream>
+
 const int WINDOW_SIZE = 700;
 const float u = WINDOW_SIZE / 10;
 
@@ -214,6 +216,8 @@ void run_gui(Board &b) {
                 // Regenerate valid moves after undo
                 valid_moves = validate_moves(b, gen_moves(b));
             }
+
+            std::cout << "Zobrist Hash: " << b.zobrist_hash << "\n";
         }
 
         // Draw graphics
