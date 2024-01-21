@@ -5,6 +5,8 @@
 #include "move.hpp"
 #include "movegen.hpp"
 
+#include <iostream>
+
 Board::Board() {
 	rng = std::mt19937_64(0);
 	initialize_zobrist_tables();
@@ -30,17 +32,7 @@ void Board::initialize_zobrist_tables() {
 	zobrist_to_move_key = gen_rand_U64();
 }
 
-// Update zobrist hash when making a move:
-	// xor out moving piece from origin (from)
-	// xor out captured piece from its square (cap_sq)
-	// xor in moving piece to its destination (to)
-	// xor out old castling_rights 
-	// xor in new castling rights
-	// xor out old enpas target square if there is one
-	// xor in new enpas target square if there is one
-	// xor in/out to_move key
-
-int Board::make_move(int move) {
+int Board::make_move(int move, int real_move) {
 	int from = get_from(move);
 	int to = get_to(move);
 	int mtype = get_mtype(move);
@@ -63,6 +55,7 @@ int Board::make_move(int move) {
 
 	if (mtype == CAPTURE) {
 		int cap_sq = flag == EN_PASSANT ? to + south : to;
+		zobrist_hash ^= zobrist_piece_table[!to_move][piece[cap_sq]][cap_sq];
 		captured_pieces[to_move].push(piece[cap_sq]);
 		piece_squares[!to_move].erase(cap_sq);
 		piece[cap_sq] = EMPTY;
@@ -70,19 +63,15 @@ int Board::make_move(int move) {
 
 		// Update material value
 		material[!to_move] -= PIECE_VALUE[captured_pieces[to_move].top()];
-
-		// xor out captured piece
-		zobrist_hash ^= zobrist_piece_table[!to_move][piece[cap_sq]][cap_sq];
 	}
-
-	zobrist_hash ^= zobrist_piece_table[to_move][piece[from]][from];
-	zobrist_hash ^= zobrist_piece_table[to_move][piece[from]][to];
 
 	// Adjust moving piece square in piece_squares
 	piece_squares[to_move].erase(from);
 	piece_squares[to_move].insert(to);
 
 	// Move piece to "to" and empty "from"
+	zobrist_hash ^= zobrist_piece_table[to_move][piece[from]][from];
+	zobrist_hash ^= zobrist_piece_table[to_move][piece[from]][to];
 	piece[to] = piece[from];
 	color[to] = color[from];
 	piece[from] = EMPTY;
@@ -117,23 +106,27 @@ int Board::make_move(int move) {
 	}
 
 	// Change piece type to promotion piece, if applicable
+	int promotion_piece = 0;
 	switch (flag) {
 		case P_BISHOP:
-			piece[to] = BISHOP;
-			material[to_move] += PIECE_VALUE[BISHOP] - PIECE_VALUE[PAWN];
+			promotion_piece = BISHOP;
 			break;
 		case P_KNIGHT:
-			piece[to] = KNIGHT;
-			material[to_move] += PIECE_VALUE[KNIGHT] - PIECE_VALUE[PAWN];
+			promotion_piece = KNIGHT;
 			break;
 		case P_ROOK:
-			piece[to] = ROOK;
-			material[to_move] += PIECE_VALUE[ROOK] - PIECE_VALUE[PAWN];
+			promotion_piece = ROOK;
 			break;
 		case P_QUEEN:
-			piece[to] = QUEEN;
-			material[to_move] += PIECE_VALUE[QUEEN] - PIECE_VALUE[PAWN];
+			promotion_piece = QUEEN;
 			break;
+	}
+
+	if (promotion_piece) {
+		piece[to] = promotion_piece;
+		material[to_move] += PIECE_VALUE[promotion_piece] - PIECE_VALUE[PAWN];
+		zobrist_hash ^= zobrist_piece_table[to_move][PAWN][to];
+		zobrist_hash ^= zobrist_piece_table[to_move][promotion_piece][to];
 	}
 
 	update_castling_rights(piece[to]);
@@ -155,17 +148,7 @@ int Board::make_move(int move) {
 	return valid;
 }
 
-// Undo zobrist hash when unmaking a move:
-	// xor out moving piece from destination
-	// xor in moving piece to origin
-	// xor in captured piece
-	// xor out updated castling rights
-	// xor in old castling rights
-	// xor out enpas target square if there is one
-	// xor in previous enpas target square if there is one
-	// xor in/out to_move key
-
-void Board::unmake_move(int move) {
+void Board::unmake_move(int move, int real_move) {
 	int from = get_from(move);
 	int to = get_to(move);
 	int mtype = get_mtype(move);
@@ -175,13 +158,23 @@ void Board::unmake_move(int move) {
 	to_move = !to_move;
 	zobrist_hash ^= zobrist_to_move_key;
 
+	int cur_enpas_sq = enpas_sq.top();
+	if (cur_enpas_sq != -1) {
+		zobrist_hash ^= zobrist_enpas_table[cur_enpas_sq % 8];
+	}
 	enpas_sq.pop();
+	int prev_enpas_sq = enpas_sq.top();
+	if (prev_enpas_sq != -1) {
+		zobrist_hash ^= zobrist_enpas_table[prev_enpas_sq % 8];
+	}
 
 	// Unmake normal move
 	piece[from] = piece[to];
 	color[from] = color[to];
 	piece_squares[to_move].erase(to);
 	piece_squares[to_move].insert(from);
+	zobrist_hash ^= zobrist_piece_table[to_move][piece[from]][to];
+	zobrist_hash ^= zobrist_piece_table[to_move][piece[from]][from];
 
 	if (mtype == CAPTURE) {
 		// Capture logic is mostly same for normal captures and en passant,
@@ -195,6 +188,8 @@ void Board::unmake_move(int move) {
 		piece[cap_sq] = captured_piece;
 		color[cap_sq] = !to_move;
 		material[!to_move] += PIECE_VALUE[captured_piece];
+
+		zobrist_hash ^= zobrist_piece_table[!to_move][piece[cap_sq]][cap_sq];
 	}
 
 	if (flag == CASTLE) {
@@ -222,23 +217,27 @@ void Board::unmake_move(int move) {
 
 	// If the flag is a promotion of any kind, change the piece at 
 	// "from" to a pawn and revert material changes
+	int promotion_piece = 0;
 	switch (flag) {
 		case P_BISHOP:
-			piece[from] = PAWN;
-			material[to_move] -= PIECE_VALUE[BISHOP] - PIECE_VALUE[PAWN];
+			promotion_piece = BISHOP;
 			break;
 		case P_KNIGHT:
-			piece[from] = PAWN;
-			material[to_move] -= PIECE_VALUE[KNIGHT] - PIECE_VALUE[PAWN];
+			promotion_piece = KNIGHT;
 			break;
 		case P_ROOK:
-			piece[from] = PAWN;
-			material[to_move] -= PIECE_VALUE[ROOK] - PIECE_VALUE[PAWN];
+			promotion_piece = ROOK;
 			break;
 		case P_QUEEN:
-			piece[from] = PAWN;
-			material[to_move] -= PIECE_VALUE[QUEEN] - PIECE_VALUE[PAWN];
+			promotion_piece = QUEEN;
 			break;
+	}
+
+	if (promotion_piece) {
+		piece[from] = PAWN;
+		material[to_move] -= PIECE_VALUE[promotion_piece] - PIECE_VALUE[PAWN];
+		zobrist_hash ^= zobrist_piece_table[to_move][PAWN][from];
+		zobrist_hash ^= zobrist_piece_table[to_move][promotion_piece][from];	
 	}
 
 	// Only empty "to" for quiet moves or en passant captures
@@ -251,7 +250,9 @@ void Board::unmake_move(int move) {
 	// Pop the latest castling rights update and revert it
 	int castling_rights_update = castling_rights_updates.top();
 	castling_rights_updates.pop();
+	zobrist_hash ^= zobrist_castle_table[castling_rights];
 	castling_rights |= castling_rights_update;
+	zobrist_hash ^= zobrist_castle_table[castling_rights];
 
 	if (piece[from] == KING) {
 		king_squares[to_move] = from;

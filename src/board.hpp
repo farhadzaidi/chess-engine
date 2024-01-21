@@ -74,8 +74,8 @@ public:
 
     void initialize_zobrist_tables();
 
-    int make_move(int move);
-    void unmake_move(int move);
+    int make_move(int move, int real_move = 0);
+    void unmake_move(int move, int real_move = 0);
     void update_castling_rights(int moving_piece);
     int is_attacked(int sq);
     int game_over();

@@ -136,6 +136,7 @@ void load_from_FEN(Board &b, std::string FEN) {
     b.num_moves = std::stoi(num_moves);
 
     b.set_zobrist_hash();
+    std::cout << "Initial Zobrist Hash: " << b.zobrist_hash << "\n";
 }
 
 

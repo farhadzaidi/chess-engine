@@ -12,7 +12,7 @@
 
 #include <iostream>
 
-const int WINDOW_SIZE = 700;
+const int WINDOW_SIZE = 1500;
 const float u = WINDOW_SIZE / 10;
 
 const sf::Color LIGHT(245, 245, 245);
@@ -158,6 +158,7 @@ void run_gui(Board &b) {
                     int move = search(b, ENGINE_DEPTH);
                     b.make_move(move);
                     valid_moves = validate_moves(b, gen_moves(b));
+                    std::cout << "Zobrist Hash: " << b.zobrist_hash << "\n";
                 }
 
                 // Handle player move
@@ -211,13 +212,11 @@ void run_gui(Board &b) {
                     b.unmake_move(b.move_list.top()); // unmake engine move
                     int player_move = b.move_list.top();
                     b.unmake_move(player_move);
+                    // Regenerate valid moves after undo
+                    valid_moves = validate_moves(b, gen_moves(b));
+                    std::cout << "Zobrist Hash: " << b.zobrist_hash << "\n";
                 }
-
-                // Regenerate valid moves after undo
-                valid_moves = validate_moves(b, gen_moves(b));
             }
-
-            std::cout << "Zobrist Hash: " << b.zobrist_hash << "\n";
         }
 
         // Draw graphics
