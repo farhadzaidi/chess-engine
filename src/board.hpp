@@ -8,6 +8,15 @@
 
 #include "constants.hpp"
 
+struct ttEntry {
+    int depth;
+    int evaluation;
+    int node_type;
+
+    ttEntry() {}
+    ttEntry(int d, int e) : depth(d), evaluation(e) {}
+};
+
 class Board {
 public:
    
@@ -61,16 +70,16 @@ public:
     std::stack<int> move_list;
     int material[2] = {};
 
-    // Stores zobrist keys (randomly generated at board initialization) for
+    // Stores zobrist hashes (randomly generated at board initialization) for
     // each combination of piece color, type, and position
+    // We also have zobrist hashes for other board attributes
+    // This stuff is used to hash positions for the transposition table
     U64 zobrist_piece_table[2][7][64];
-    // Zobrist keys for other board attributes
     U64 zobrist_enpas_table[8];
     U64 zobrist_castle_table[16];
-    U64 zobrist_to_move_key;
-
+    U64 zobrist_to_move_hash;
     U64 zobrist_hash;
-    std::unordered_map<U64, int> transpo_table; 
+    std::unordered_map<U64, ttEntry> trans_table; 
 
     void initialize_zobrist_tables();
 

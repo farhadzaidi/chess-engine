@@ -2,8 +2,8 @@
 #define CONSTANTS_H
 
 #define U64 unsigned long long
-#define INF 10000
-#define ENGINE_DEPTH 6
+#define INF 0x3FFF
+#define ENGINE_DEPTH 7
 
 enum Color {
     BLACK,

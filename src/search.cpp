@@ -4,6 +4,8 @@
 #include "movegen.hpp"
 #include "evaluation.hpp"
 
+#include <iostream>
+
 // Search uses the minimax algorithm with the following pruning algorithms:
 	// Alpha-beta pruning
 
@@ -14,7 +16,7 @@
 	// Quiescence search
 	// Late move reductions
 	// Aspiration windows
-	// Time search (instead of fixed depth)
+	// Time search (instead of fixed depth
 
 int search(Board &b, int depth) {
 	int alpha = -INF;
@@ -22,10 +24,14 @@ int search(Board &b, int depth) {
 	std::vector<int> moves = gen_moves(b);
 	int max_score = -INF;
 	int best_move = 0;
+	int nodes = 0;
 
 	for (int move : moves) {
 		if (b.make_move(move)) {
-			int score = -negamax(b, depth - 1, -beta, -alpha);
+			nodes++;
+			int score = -negamax(b, depth - 1, -beta, -alpha, nodes);
+			b.trans_table.emplace(b.zobrist_hash, ttEntry(depth, score));
+			
 			if (score > max_score) {
 				max_score = score;
 				alpha = score;
@@ -36,11 +42,12 @@ int search(Board &b, int depth) {
 		b.unmake_move(move);
 	}
 
+	std::cout << nodes << " nodes searched at depth " << ENGINE_DEPTH << ".\n";
 	return best_move;
 }
 
 
-int negamax(Board &b, int depth, int alpha, int beta) {
+int negamax(Board &b, int depth, int alpha, int beta, int &nodes) {
 	if (depth == 0 || b.game_over()) {
 		return eval(b);
 	}
@@ -49,7 +56,15 @@ int negamax(Board &b, int depth, int alpha, int beta) {
 	int max_score = -INF;
 	for (int move : moves) {
 		if (b.make_move(move)) {
-			int score = -negamax(b, depth - 1, -beta, -alpha);
+			nodes++;
+			// Stop search if transposition encountered and return previously
+			// encountered score of transposition
+			if (b.trans_table.find(b.zobrist_hash) != b.trans_table.end()) {
+				b.unmake_move(move);
+				return b.trans_table[b.zobrist_hash].evaluation;
+			}
+
+			int score = -negamax(b, depth - 1, -beta, -alpha, nodes);
 			if (score > max_score) {
 				max_score = score;
 				alpha = score;
@@ -66,11 +81,3 @@ int negamax(Board &b, int depth, int alpha, int beta) {
 
 	return max_score;
 }
-
-// Transposition table:
-	// cache every position and its evaluation in the table
-	// after making a move, check if the position is in the table
-		// if so, return the evaluation of the position
-
-// void order_moves(std::vector<int> &moves) {}
-

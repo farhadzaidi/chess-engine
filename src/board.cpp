@@ -29,7 +29,7 @@ void Board::initialize_zobrist_tables() {
 		zobrist_castle_table[i] = gen_rand_U64();
 	}
 
-	zobrist_to_move_key = gen_rand_U64();
+	zobrist_to_move_hash = gen_rand_U64();
 }
 
 int Board::make_move(int move, int real_move) {
@@ -140,7 +140,7 @@ int Board::make_move(int move, int real_move) {
 
 	// Switch turn
 	to_move = !to_move;
-	zobrist_hash ^= zobrist_to_move_key;
+	zobrist_hash ^= zobrist_to_move_hash;
 
 	// Add to move list
 	move_list.push(move);
@@ -156,7 +156,7 @@ void Board::unmake_move(int move, int real_move) {
 
 	// Revert turn
 	to_move = !to_move;
-	zobrist_hash ^= zobrist_to_move_key;
+	zobrist_hash ^= zobrist_to_move_hash;
 
 	int cur_enpas_sq = enpas_sq.top();
 	if (cur_enpas_sq != -1) {
@@ -397,7 +397,7 @@ void Board::set_zobrist_hash() {
 	}
 
 	zobrist_hash ^= zobrist_castle_table[castling_rights];
-	zobrist_hash ^= zobrist_to_move_key;
+	zobrist_hash ^= zobrist_to_move_hash;
 }
 
 // HELPER FUNCTIONS

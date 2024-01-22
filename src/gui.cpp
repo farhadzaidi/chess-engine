@@ -158,7 +158,7 @@ void run_gui(Board &b) {
                     int move = search(b, ENGINE_DEPTH);
                     b.make_move(move);
                     valid_moves = validate_moves(b, gen_moves(b));
-                    std::cout << "Zobrist Hash: " << b.zobrist_hash << "\n";
+                    // std::cout << "Zobrist Hash: " << b.zobrist_hash << "\n";
                 }
 
                 // Handle player move
@@ -214,7 +214,7 @@ void run_gui(Board &b) {
                     b.unmake_move(player_move);
                     // Regenerate valid moves after undo
                     valid_moves = validate_moves(b, gen_moves(b));
-                    std::cout << "Zobrist Hash: " << b.zobrist_hash << "\n";
+                    // std::cout << "Zobrist Hash: " << b.zobrist_hash << "\n";
                 }
             }
         }
