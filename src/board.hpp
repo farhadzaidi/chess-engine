@@ -14,7 +14,7 @@ struct ttEntry {
     int node_type;
 
     ttEntry() {}
-    ttEntry(int d, int e) : depth(d), evaluation(e) {}
+    ttEntry(int d, int e, int nt) : depth(d), evaluation(e), node_type(nt) {}
 };
 
 class Board {

@@ -12,7 +12,7 @@
 
 #include <iostream>
 
-const int WINDOW_SIZE = 1500;
+const int WINDOW_SIZE = 700;
 const float u = WINDOW_SIZE / 10;
 
 const sf::Color LIGHT(245, 245, 245);
@@ -143,6 +143,8 @@ void run_gui(Board &b) {
 	int from = -1;
 	int to = -1;
     std::vector<int> valid_moves = validate_moves(b, gen_moves(b));
+
+    std::cout << "ENGINE PLAYING AT DEPTH " << ENGINE_DEPTH << "\n\n";
 
     while (window.isOpen()) {
     	// Handle input from player

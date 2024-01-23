@@ -1,5 +1,5 @@
-#ifndef ENGINE_H
-#define ENGINE_H
+#ifndef SEARCH_H
+#define SEARCH_H
 
 #include <vector>
 
