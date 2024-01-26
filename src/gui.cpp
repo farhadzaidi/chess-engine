@@ -144,8 +144,6 @@ void run_gui(Board &b) {
 	int to = -1;
     std::vector<int> valid_moves = validate_moves(b, gen_moves(b));
 
-    std::cout << "ENGINE PLAYING AT DEPTH " << ENGINE_DEPTH << "\n\n";
-
     while (window.isOpen()) {
     	// Handle input from player
         sf::Event event;
@@ -155,14 +153,6 @@ void run_gui(Board &b) {
             }
 
             if (!b.game_over()) {
-                // Handle engine move
-                if (b.to_move != player_side) {
-                    int move = search(b, ENGINE_DEPTH);
-                    b.make_move(move);
-                    valid_moves = validate_moves(b, gen_moves(b));
-                    // std::cout << "Zobrist Hash: " << b.zobrist_hash << "\n";
-                }
-
                 // Handle player move
                 if (event.type == sf::Event::MouseButtonPressed 
                     && event.mouseButton.button == sf::Mouse::Left) {
@@ -216,13 +206,19 @@ void run_gui(Board &b) {
                     b.unmake_move(player_move);
                     // Regenerate valid moves after undo
                     valid_moves = validate_moves(b, gen_moves(b));
-                    // std::cout << "Zobrist Hash: " << b.zobrist_hash << "\n";
                 }
             }
         }
 
+        // Handle engine move
+        if (!b.game_over() && b.to_move != player_side) {
+            int move = search(b, 6);
+            b.make_move(move);
+            valid_moves = validate_moves(b, gen_moves(b));
+        }
+
         // Draw graphics
-    	window.clear(LIGHT);
+        window.clear(LIGHT);
         draw_board(window, font);
         draw_pieces(window, b);
         draw_moves(window, b, from, valid_moves);

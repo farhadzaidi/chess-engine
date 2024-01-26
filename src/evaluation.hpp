@@ -3,6 +3,11 @@
 
 class Board;
 
+// Once the total number of pieces on the board is at or below this value,
+// the game has entered the endgame and we can change the eval function to
+// alter the engine's behavior in the endgame
+const int ENDGAME_THRESHOLD = 16;
+
 const int PAWN_EVAL_MAP[2][64] = {
 	// WHITE
 	{

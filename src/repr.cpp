@@ -5,6 +5,7 @@
 #include "repr.hpp"
 #include "constants.hpp"
 #include "board.hpp"
+#include "move.hpp"
 
 static const std::unordered_map<char, int> chr_to_p = {
     std::make_pair('0', EMPTY),
@@ -48,7 +49,6 @@ std::string sq_to_chess(int sq) {
     res.push_back(rank);
     return res;
 }
-
 
 // uses FEN notation to setup the board
 void load_from_FEN(Board &b, std::string FEN) {
@@ -208,3 +208,11 @@ void print_attr(Board &b) {
 
     std::cout << "\n\n";
 }
+
+void print_move(int move) {
+    std::string from = sq_to_chess(get_from(move));
+    std::string to = sq_to_chess(get_to(move));
+
+    std::cout << from << " to " << to << "\n";
+}
+

@@ -11,5 +11,6 @@ std::string sq_to_chess(int sq);
 void load_from_FEN(Board &b, std::string FEN);
 void print_board(Board &b);
 void print_attr(Board &b);
+void print_move(int move);
 
 #endif 

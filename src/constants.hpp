@@ -3,7 +3,6 @@
 
 #define U64 unsigned long long
 #define INF 0x3FFF
-#define ENGINE_DEPTH 6
 
 enum Color {
     BLACK,
@@ -69,6 +68,7 @@ const int WRR_START = h1;
 const int BLR_START = a8;
 const int BRR_START = h8;
 
+// Material values for each piece type
 const int PIECE_VALUE[7] = {0, 100, 300, 300, 500, 900, INF};
 
 #endif
