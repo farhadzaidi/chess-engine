@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <random>
 
 #include "constants.hpp"
 #include "search.hpp"
@@ -58,7 +59,8 @@ int negamax(Board &b, int depth, int alpha, int beta, int &nodes) {
 	}
 
 	if (depth == 0) {
-		return quiescence_search(b, alpha, beta, nodes);
+		// return quiescence_search(b, alpha, beta, nodes);
+		return eval(b);
 	}
 
 	std::vector<int> moves = gen_moves(b);
@@ -128,8 +130,6 @@ int quiescence_search(Board &b, int alpha, int beta, int &nodes) {
 
 int move_comparator(const int &m1, const int &m2) {
 	if (get_mtype(m1) == CAPTURE && get_mtype(m2) != CAPTURE) {
-		return 1;
-	} else if (get_mtype(m1) != CAPTURE && get_mtype(m2) == CAPTURE) {
 		return 1;
 	}
 

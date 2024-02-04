@@ -12,7 +12,7 @@
 
 #include <iostream>
 
-const int WINDOW_SIZE = 700;
+const int WINDOW_SIZE = 1500;
 const float u = WINDOW_SIZE / 10;
 
 const sf::Color LIGHT(245, 245, 245);
