@@ -210,18 +210,19 @@ void run_gui(Board &b) {
             }
         }
 
-        // Handle engine move
-        if (!b.game_over() && b.to_move != player_side) {
-            int move = search(b, 6);
-            b.make_move(move);
-            valid_moves = validate_moves(b, gen_moves(b));
-        }
-
         // Draw graphics
         window.clear(LIGHT);
         draw_board(window, font);
         draw_pieces(window, b);
         draw_moves(window, b, from, valid_moves);
         window.display();
+
+        // Handle engine move
+        if (!b.game_over() && b.to_move != player_side) {
+            // int move = search(b, 6);
+            int move = iterative_search(b);
+            b.make_move(move);
+            valid_moves = validate_moves(b, gen_moves(b));
+        }
     }
 }
