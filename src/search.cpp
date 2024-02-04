@@ -18,16 +18,32 @@
 		// Record exact scores
 		// Record lower bound values for all other nodes
 
+// How to use TT
+	// If we encounter a fully searched exact node, we just return its value
+	// If we encounter a cut-node, that means that the evaluation of this node
+	// caused a beta cutoff, and we returned beta. This is an UPPER BOUND (since
+	// beta is an upper bound) and as such, we should update the current beta
+	// value and stop searching this node
+	// If we encounter an all-node, this means that this node did not improve
+	// the lower bound (alpha) and as such there is no need to search this
+	// node
+
+	// This only works assuming that the depth of the node is >= to current
+	// depth
+	// There are ways to use nodes with lower depth but im not sure yet
+
 int iterative_search(Board &b) {
 	int search_cancelled = 0;
 	int prev_best_move = 0;
 	int best_move = 0;
+	int nodes = 0;
+
 	for (int i = 1; i <= INF; i++) {
-		best_move = search(b, i, prev_best_move, search_cancelled);
+		best_move = search(b, i, prev_best_move, nodes, search_cancelled);
 		if (search_cancelled) {
 			break;
 		}
-
+		std::cout << nodes << " nodes searched at depth " << i << "\n";
 		prev_best_move = best_move;
 	}
 
@@ -35,11 +51,10 @@ int iterative_search(Board &b) {
 	return prev_best_move;
 }
 
-int search(Board &b, int depth, int prev_best_move, int &search_cancelled) {
+int search(Board &b, int depth, int prev_best_move, int &nodes, int &search_cancelled) {
 	int alpha = -INF;
 	int beta = INF;
 	int best_move = 0;
-	int nodes = 0;
 
 	std::vector<int> moves = gen_moves(b);
 	order_moves(moves);
@@ -72,7 +87,6 @@ int search(Board &b, int depth, int prev_best_move, int &search_cancelled) {
 		b.unmake_move(move);
 	}
 
-	std::cout << nodes << " nodes searched at depth " << depth << "\n"; 
 	return best_move;
 }
 

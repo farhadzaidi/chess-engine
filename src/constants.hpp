@@ -54,7 +54,8 @@ enum Square {
 
 enum ttNodeType {
     EXACT,
-    ALPHA
+    ALPHA,
+    BETA
 };
 
 const int BISHOP_MOVES[8] = {-11, -9, 9, 11, 0, 0, 0, 0};

@@ -8,15 +8,6 @@
 
 #include "constants.hpp"
 
-struct ttEntry {
-    int depth;
-    int evaluation;
-    int node_type;
-
-    ttEntry() {}
-    ttEntry(int d, int e, int nt) : depth(d), evaluation(e), node_type(nt) {}
-};
-
 class Board {
 public:
    
@@ -79,7 +70,7 @@ public:
     U64 zobrist_castle_table[16];
     U64 zobrist_to_move_hash;
     U64 zobrist_hash;
-    std::unordered_map<U64, ttEntry> trans_table; 
+    std::unordered_map<U64, int> trans_table; 
 
     void initialize_zobrist_tables();
 
