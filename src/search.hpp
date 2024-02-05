@@ -5,7 +5,7 @@
 
 class Board;
 
-const int MAX_NODES = 250000;
+const int MAX_NODES = 300000;
 
 int iterative_search(Board &b);
 int search(Board &b, int depth, int prev_best_move, int &nodes, int &search_cancelled);

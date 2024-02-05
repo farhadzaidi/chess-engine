@@ -8,6 +8,7 @@
 #include "evaluation.hpp"
 #include "repr.hpp"
 #include "move.hpp"
+#include "trans_table.hpp"
 
 #include <iostream>
 
@@ -36,9 +37,9 @@ int iterative_search(Board &b) {
 	int search_cancelled = 0;
 	int prev_best_move = 0;
 	int best_move = 0;
-	int nodes = 0;
 
 	for (int i = 1; i <= INF; i++) {
+		int nodes = 0;
 		best_move = search(b, i, prev_best_move, nodes, search_cancelled);
 		if (search_cancelled) {
 			break;
@@ -92,10 +93,6 @@ int search(Board &b, int depth, int prev_best_move, int &nodes, int &search_canc
 
 
 int negamax(Board &b, int depth, int alpha, int beta, int &nodes, int &search_cancelled) {
-	if (search_cancelled) {
-		return 0;
-	}
-
 	if (b.game_over()) {
 		return eval(b, 1);
 	}
@@ -109,37 +106,72 @@ int negamax(Board &b, int depth, int alpha, int beta, int &nodes, int &search_ca
 
 	for (int move : moves) {
 		if (b.make_move(move)) {
+			// Check is max number of nodes has been exceeded
+			// If so, set search_cancelled to true and return 0 (garbage value)
 			if (nodes > MAX_NODES) {
 				search_cancelled = 1;
 				b.unmake_move(move);
 				return 0;
 			}
 
+			int node_type = ALPHA;
 			nodes++;
+
+			if (b.trans_table.find(b.zobrist_hash) != b.trans_table.end()
+				&& get_depth(b.trans_table[b.zobrist_hash]) >= depth) {
+
+				if (get_node_type(b.trans_table[b.zobrist_hash]) == EXACT) {
+					std::cout << "TT HIT EXACT\n";
+					b.unmake_move(move);
+					return get_eval(b.trans_table[b.zobrist_hash]);
+				}
+
+				if (get_node_type(b.trans_table[b.zobrist_hash]) == ALPHA
+					&& get_eval(b.trans_table[b.zobrist_hash]) <= alpha) {
+					std::cout << "TT HIT ALPHA\n";
+					b.unmake_move(move);
+					return alpha;
+				}
+
+				if (get_node_type(b.trans_table[b.zobrist_hash]) == BETA
+					&& get_eval(b.trans_table[b.zobrist_hash]) >= beta) {
+					std::cout << "TT HIT BETA\n";
+					b.unmake_move(move);
+					return beta;
+				}
+			}
+
 			int score = -negamax(b, depth - 1, -beta, -alpha, nodes, search_cancelled);
+			// Ensure that the score is valid and not simply garbage due to the
+			// search being cancelled
+			if (search_cancelled) {
+				b.unmake_move(move);
+				return 0;
+			}
 
 			if (score >= beta) {
 				b.unmake_move(move);
+				b.trans_table[b.zobrist_hash] = new_tt_entry(BETA, depth, beta);
 				return beta;
 			}
 
 			if (score > alpha) {
 				alpha = score;
+				node_type = EXACT;
 			}
+
+			b.trans_table[b.zobrist_hash] = new_tt_entry(node_type, depth, alpha);
 		}
 
 		b.unmake_move(move);
 	}
+
 
 	return alpha;
 }
 
 
 int quiescence_search(Board &b, int alpha, int beta, int &nodes, int &search_cancelled) {
-	if (search_cancelled) {
-		return 0;
-	}
-
 	int static_eval = eval(b);
 
 	if (static_eval >= beta) {
@@ -164,6 +196,10 @@ int quiescence_search(Board &b, int alpha, int beta, int &nodes, int &search_can
 
 				nodes++;
 				int score = -quiescence_search(b, -beta, -alpha, nodes, search_cancelled);
+				if (search_cancelled) {
+					b.unmake_move(move);
+					return 0;
+				}
 
 				if (score >= beta) {
 					b.unmake_move(move);
