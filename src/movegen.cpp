@@ -3,46 +3,6 @@
 #include "board.hpp"
 #include "move.hpp"
 
-std::vector<int> gen_moves(Board &b) {
-	std::vector<int> moves;
-	for (int sq : b.piece_squares[b.to_move]) {
-		switch (b.piece[sq]) {
-			case PAWN:
-				get_pawn_moves(b, sq, moves);
-				break;
-			case BISHOP:
-				get_piece_moves(b, sq, BISHOP_MOVES, 1, moves);
-				break;
-			case KNIGHT:
-				get_piece_moves(b, sq, KNIGHT_MOVES, 0, moves);
-				break;
-			case ROOK:
-				get_piece_moves(b, sq, ROOK_MOVES, 1, moves);
-				break;
-			case QUEEN:
-				get_piece_moves(b, sq, KING_QUEEN_MOVES, 1, moves);
-				break;
-			case KING:
-				get_piece_moves(b, sq, KING_QUEEN_MOVES, 0, moves);
-				break;
-		}
-	}
-
-	return moves;
-}
-
-std::vector<int> validate_moves(Board &b, std::vector<int> moves) {
-	std::vector<int> valid_moves;
-	for (int move : moves) {
-		if (b.make_move(move)) {
-			valid_moves.push_back(move);
-		}
-
-		b.unmake_move(move);
-	}
-
-	return valid_moves;
-}
 
 void get_pawn_moves(Board &b, int sq, std::vector<int> &moves) {
 	// Set directions based on pawn's perspective
@@ -99,6 +59,7 @@ void get_pawn_moves(Board &b, int sq, std::vector<int> &moves) {
 		}
 	}
 }
+
 
 void get_piece_moves(
 	Board &b, 
@@ -171,4 +132,47 @@ void get_piece_moves(
 			moves.push_back(new_move(sq, sq - 2, QUIET, CASTLE));
 		}
 	}
+}
+
+
+std::vector<int> gen_moves(Board &b) {
+	std::vector<int> moves;
+	for (int sq : b.piece_squares[b.to_move]) {
+		switch (b.piece[sq]) {
+			case PAWN:
+				get_pawn_moves(b, sq, moves);
+				break;
+			case BISHOP:
+				get_piece_moves(b, sq, BISHOP_MOVES, 1, moves);
+				break;
+			case KNIGHT:
+				get_piece_moves(b, sq, KNIGHT_MOVES, 0, moves);
+				break;
+			case ROOK:
+				get_piece_moves(b, sq, ROOK_MOVES, 1, moves);
+				break;
+			case QUEEN:
+				get_piece_moves(b, sq, KING_QUEEN_MOVES, 1, moves);
+				break;
+			case KING:
+				get_piece_moves(b, sq, KING_QUEEN_MOVES, 0, moves);
+				break;
+		}
+	}
+
+	return moves;
+}
+
+
+std::vector<int> validate_moves(Board &b, std::vector<int> moves) {
+	std::vector<int> valid_moves;
+	for (int move : moves) {
+		if (b.make_move(move)) {
+			valid_moves.push_back(move);
+		}
+
+		b.unmake_move(move);
+	}
+
+	return valid_moves;
 }

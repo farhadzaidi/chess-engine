@@ -7,12 +7,12 @@
 #include "board.hpp"
 #include "move.hpp"
 #include "movegen.hpp"
-#include "evaluation.hpp"
-#include "search.hpp"
+#include "engine.hpp"
 
 #include <iostream>
 
-const int WINDOW_SIZE = 1500;
+/* --- ADJUST WINDOW SIZE BASED ON SCREEN SIZE BEFORE RUNNING GUI --- */
+const int WINDOW_SIZE = 700;
 const float u = WINDOW_SIZE / 10;
 
 const sf::Color LIGHT(245, 245, 245);

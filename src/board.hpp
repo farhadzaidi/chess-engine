@@ -8,6 +8,22 @@
 
 #include "constants.hpp"
 
+/*
+
+BOARD REPRESENTATION:
+
+The board is represented by two arrays of 64 elements, one for the piece type
+and one for the color of the piece. We utilize a set of mailbox boards to make
+it easy to check if a piece is out-of-bounds when moving pieces during move
+generation. 
+
+Additionally, we use a technique called Zobrist hashing to hash each board
+position. These hashes serve as entries in the transposition table which can be
+used to determine if we have seen a position before.
+
+*/
+
+
 class Board {
 public:
    
@@ -39,7 +55,7 @@ public:
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1  
     };
 
-    // Random number generator
+    // Random number generator for zobrist hashes
     std::mt19937_64 rng;
 
     // Board representation
@@ -52,8 +68,6 @@ public:
     int castling_rights = 0;
     int to_move;
     std::stack<int> enpas_sq;
-    int num_plys; // Num plys SINCE last capture or pawn advance
-    int num_moves;
 
     // Other useful attributes
     std::stack<int> castling_rights_updates;
@@ -61,9 +75,9 @@ public:
     std::stack<int> move_list;
     int material[2] = {};
 
-    // Stores zobrist hashes (randomly generated at board initialization) for
+    // Stores Zobrist hashes (randomly generated at board initialization) for
     // each combination of piece color, type, and position
-    // We also have zobrist hashes for other board attributes
+    // We also have Zobrist hashes for other board attributes
     // This stuff is used to hash positions for the transposition table
     U64 zobrist_piece_table[2][7][64];
     U64 zobrist_enpas_table[8];

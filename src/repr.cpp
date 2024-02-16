@@ -209,10 +209,3 @@ void print_attr(Board &b) {
     std::cout << "\n\n";
 }
 
-void print_move(int move) {
-    std::string from = sq_to_chess(get_from(move));
-    std::string to = sq_to_chess(get_to(move));
-
-    std::cout << from << " to " << to << "\n";
-}
-

@@ -32,6 +32,11 @@ void Board::initialize_zobrist_tables() {
 	zobrist_to_move_hash = gen_rand_U64();
 }
 
+// This function not only makes a given move on the current board position,
+// but it also verifies whether or not that move is legal. The real move
+// parameter just checks if the move is actually a move being made in the game
+// or a move being made by the engine (to later unmake). This is useful for
+// debugging when you only want to see output from real moves.
 int Board::make_move(int move, int real_move) {
 	int from = get_from(move);
 	int to = get_to(move);
@@ -39,7 +44,7 @@ int Board::make_move(int move, int real_move) {
 	int flag = get_flag(move);
 	int valid = 1;
 
-	// xor out old enpas target square if there is one
+	// Xor out old enpas target square if there is one
 	if (enpas_sq.top() != -1) {
 		zobrist_hash ^= zobrist_enpas_table[enpas_sq.top() % 8];
 	}
@@ -53,6 +58,7 @@ int Board::make_move(int move, int real_move) {
 		enpas_sq.push(-1);
 	}
 
+	// Handle capture logic
 	if (mtype == CAPTURE) {
 		int cap_sq = flag == EN_PASSANT ? to + south : to;
 		zobrist_hash ^= zobrist_piece_table[!to_move][piece[cap_sq]][cap_sq];
@@ -77,10 +83,9 @@ int Board::make_move(int move, int real_move) {
 	piece[from] = EMPTY;
 	color[from] = EMPTY;
 
-	// For castling, simply move rook to right or left of king based
-	// on whether the move is a short or long castle
-	// Also, empty rook's old position and adjust piece_squares
-	// for the moving rook
+	// For castling, simply move rook to right or left of king based on whether
+	// the move is a short or long castle. Also, empty rook's old position and 
+	// adjust piece_squares for the moving rook.
 	if (flag == CASTLE) {
 		valid &= !is_attacked(from);
 
@@ -148,6 +153,8 @@ int Board::make_move(int move, int real_move) {
 	return valid;
 }
 
+// This function is mostly self-explanatory, it just undos all the changes we
+// made to the board when making a move.
 void Board::unmake_move(int move, int real_move) {
 	int from = get_from(move);
 	int to = get_to(move);
@@ -262,6 +269,9 @@ void Board::unmake_move(int move, int real_move) {
 	move_list.pop();
 }
 
+// This is a helper function that performs all the logic for updating the
+// castling rights for the current position. Note that we also store each update
+// which is important for unmaking the move.
 void Board::update_castling_rights(int moving_piece) {
 	// xor out old castling rights
 	zobrist_hash ^= zobrist_castle_table[castling_rights];
@@ -305,6 +315,8 @@ void Board::update_castling_rights(int moving_piece) {
 	zobrist_hash ^= zobrist_castle_table[castling_rights];
 }
 
+// This function determines if a square is attacked by an enemy piece which is
+// useful for determining checks (and therefore legal moves).
 int Board::is_attacked(int sq) {
 	int slide[5] = {0, 1, 0, 1, 0};
 	int attackers[5][2] = {
