@@ -21,12 +21,9 @@ This project implements a chess engine in C++ and offers a GUI to allow the user
 3. **Adjust Screen Size**: Before running the GUI, you can adjust the screen size by modifying the `WINDOW_SIZE` variable in `gui.cpp`.
 4. **Running the GUI**: You can launch the GUI by running the `make run` command from the root directory.
 5. **Running the Perft Test**: To run the Perft test, use the command `make perft DEPTH={depth}` where `{depth}` is the desired depth. For example, `make perft 5` will run the Perft test to a depth of 5.
-6. 
 
-## Screenshots
 
-![GUI](assets/screenshots/gui.png)
-![Perft](assets/screenshots/perft.png)
+![GUI1](assets/images/gui.png)
 
 
 ## License
