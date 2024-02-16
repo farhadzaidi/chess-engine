@@ -14,9 +14,9 @@ This project implements a chess engine in C++ and offers a GUI to allow the user
 
 - **Checkmate and Stalemate Detection:** Detects a win or draw when one side runs out of legal moves.
 
-<div style="text-align: center; padding: 10px 0;">
+<p align="center">
     <img src="assets/images/gui.png" alt="GUI" width="500">
-</div>
+</p>
 
 ## How to Use
 
