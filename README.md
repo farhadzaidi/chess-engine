@@ -23,7 +23,7 @@ This project implements a chess engine in C++ and offers a GUI to allow the user
 5. **Running the Perft Test**: To run the Perft test, use the command `make perft DEPTH={depth}` where `{depth}` is the desired depth. For example, `make perft 5` will run the Perft test to a depth of 5.
 
 
-![GUI1](assets/images/gui.png)
+<img src="assets/images/gui.png" alt="GUI" width="500">
 
 
 ## License
