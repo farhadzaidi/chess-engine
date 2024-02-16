@@ -121,22 +121,7 @@ void load_from_FEN(Board &b, std::string FEN) {
         i += 2;
     }
 
-    // Skip space
-    i++;
-
-    // Get number of half moves and full moves
-    b.num_plys = FEN[i] - '0';
-    i += 2;
-
-    std::string num_moves = "";
-    while (!std::isspace(FEN[i])) {
-        num_moves += FEN[i];
-        i++;
-    }
-    b.num_moves = std::stoi(num_moves);
-
     b.set_zobrist_hash();
-    // std::cout << "Initial Zobrist Hash: " << b.zobrist_hash << "\n";
 }
 
 
